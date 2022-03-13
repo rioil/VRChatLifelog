@@ -8,7 +8,9 @@
     xmlns:vm="clr-namespace:VRChatLogWathcer.ViewModels"
     Title="MainWindow"
     Width="525"
-    Height="350">
+    Height="350"
+    Closing="Window_Closing"
+    WindowStartupLocation="CenterScreen">
 
     <Window.DataContext>
         <vm:MainWindowViewModel />

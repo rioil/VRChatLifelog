@@ -27,5 +27,13 @@ namespace VRChatLogWathcer.Views
         {
             InitializeComponent();
         }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            // ウィンドウは閉じずに最小化する
+            e.Cancel = true;
+            WindowState = WindowState.Minimized;
+            ShowInTaskbar = false;
+        }
     }
 }

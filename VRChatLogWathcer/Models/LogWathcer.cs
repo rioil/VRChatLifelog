@@ -1,18 +1,23 @@
 ﻿using Livet;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
-using VRChatLogWathcer.Models.VRCLog;
+using VRChatLogWathcer.Extensions;
 
 namespace VRChatLogWathcer.Models
 {
     public class LogWathcer : NotificationObject
     {
         private FileSystemWatcher? _watcher;
+        private Task? _readLogFileTask;
+        private CancellationTokenSource? _tokenSource;
+
+        //lang=regex
+        private readonly Regex LogFileNamePattern = new(@"output_log_\d{2}-\d{2}-\d{2}.txt");
+        private const string LogFileNameFilter = @"output_log_*.txt";
 
         public LogWathcer(string vrchatLogDir)
         {
@@ -24,54 +29,76 @@ namespace VRChatLogWathcer.Models
         /// </summary>
         public string VRChatLogDirectory { get; private set; }
 
-        private Task? _readLogFileTask;
-
-        List<JoinLeaveHistory> _joinLeaveHistories = new();
-        List<LocationHistory> _locationHistories = new();
-        Guid _worldId;
-
-        public void Start()
+        /// <summary>
+        /// ログディレクトリの監視とログファイルの読み取りを開始します．
+        /// </summary>
+        /// <returns></returns>
+        public async Task Start()
         {
-            if (_watcher is object) { return; }
+            if (_watcher is not null) { return; }
 
+            // ログディレクトリのファイル変更監視
             _watcher = new FileSystemWatcher()
             {
                 Path = VRChatLogDirectory,
-                Filter = "*.txt",
+                Filter = LogFileNameFilter,
                 NotifyFilter = NotifyFilters.FileName,
                 IncludeSubdirectories = false,
             };
 
-            _watcher.Changed += (s, e) => { System.Diagnostics.Debug.WriteLine($"{e.FullPath} changed."); };
-            _watcher.Created += (s, e) => { System.Diagnostics.Debug.WriteLine($"{e.FullPath} created."); };
-            _watcher.Deleted += (s, e) => { System.Diagnostics.Debug.WriteLine($"{e.FullPath} deleted."); };
+            _watcher.Created += (s, e) => OnFileCreated(e.FullPath);
             _watcher.Renamed += (s, e) => { System.Diagnostics.Debug.WriteLine($"{e.FullPath} renamed."); };
 
             _watcher.EnableRaisingEvents = true;
 
-            // 最新ファイルの内容監視
-            // MEMO:ちゃんと読めてる
-            var latest = Directory.EnumerateFiles(VRChatLogDirectory, "*.txt")
-                .OrderByDescending(path => File.GetCreationTime(path))
-                .FirstOrDefault();
-
-            if (latest is null) { return; }
-            _readLogFileTask = Task.Run(() => ReadLogFile(latest));
+            // ログファイルの内容監視
+            await StartLogFileWatching();
         }
 
-        public void Stop()
+        /// <summary>
+        /// ログディレクトリの監視とログファイルの読み取りを停止します．
+        /// </summary>
+        /// <returns></returns>
+        public async Task Stop()
         {
             if (_watcher is null) { return; }
 
             _watcher.EnableRaisingEvents = false;
             _watcher = null;
+
+            _tokenSource?.Cancel();
+            if (_readLogFileTask is not null)
+            {
+                await _readLogFileTask.ConfigureAwait(false);
+            }
         }
 
-        private async Task ReadLogFile(string path)
+        /// <summary>
+        /// 監視対象ディレクトリにファイルが作成された際の処理を行います．
+        /// </summary>
+        /// <param name="fileFullPath">作成されたファイルのフルパス</param>
+        private async void OnFileCreated(string fileFullPath)
+        {
+            if (LogFileNamePattern.IsMatch(fileFullPath))
+            {
+                await ChangeWatchingFile(fileFullPath);
+            }
+        }
+
+        /// <summary>
+        /// ログファイルを解析します．一度EOFに到達してもファイルが更新されるのを待機します．
+        /// </summary>
+        /// <param name="path">ファイルパス</param>
+        /// <param name="cancellationToken">キャンセルトークン</param>
+        /// <returns></returns>
+        /// <exception cref="IOException"></exception>
+        private async Task WatchLogFile(string path, CancellationToken cancellationToken)
         {
             using var reader = new StreamReader(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
             var buffer = new List<string>();
-            while (true)
+
+            using var context = new LifelogContext();
+            while (!cancellationToken.IsCancellationRequested)
             {
                 if (!reader.EndOfStream)
                 {
@@ -80,7 +107,7 @@ namespace VRChatLogWathcer.Models
                     {
                         if (LogItem.TryParse(buffer.ToArray(), out var item))
                         {
-                            ProcessLogItem(item);
+                            context.Add(item);
                         }
                         buffer.Clear();
                     }
@@ -91,100 +118,100 @@ namespace VRChatLogWathcer.Models
                 }
                 else
                 {
-                    await Task.Delay(1000);
-                }
-            }
-        }
-
-        private void ProcessLogItem(LogItem item)
-        {
-            // TODO ログアイテムをDBに保存するとか
-            //lang=regex
-            const string PlayerJoinLogPattern = "\\[Behaviour\\] Initialized PlayerAPI \"(?<player>.*)\" is (?<type>(remote)|(local))";
-            //lang=regex
-            const string PlayerLeftLogPattern = @"\[Behaviour\] Unregistering (?<player>.*)";
-            //lang=regex
-            const string WorldJoinLogPattern = @"\[Behaviour\] Joining wrld_(?<worldId>[a-z\d]{8}\-[a-z\d]{4}\-[a-z\d]{4}\-[a-z\d]{4}\-[a-z\d]{12}):(\d+)(~region\(([\w]+)\))?(~([\w]+)\(usr_([\w-]+)\)((\~canRequestInvite)?)(~region\(([\w].+)\))?~nonce\((.+)\))?";
-
-            // プレイヤーjoinログ
-            var match = Regex.Match(item.Content, PlayerJoinLogPattern);
-            if (match.Success)
-            {
-                var playerName = match.Groups["player"].Value;
-                var isLocal = match.Groups["type"].Value == "local";
-                if (isLocal)
-                {
-                    _locationHistories.Add(new LocationHistory(_worldId, item.Time));
-                }
-                _joinLeaveHistories.Add(new JoinLeaveHistory(playerName, item.Time, isLocal));
-                return;
-            }
-
-            // プレイヤーleaveログ
-            match = Regex.Match(item.Content, PlayerLeftLogPattern);
-            if (match.Success)
-            {
-                var playerName = match.Groups["player"].Value;
-                var history = _joinLeaveHistories.Find(h => h.PlayerName == playerName && h.Left is null);
-                if (history is null) { return; }
-
-                history.Left = item.Time;
-                if (history.IsLocal)
-                {
-                    var locHistory = _locationHistories.Find(h => h.Left is null);
-                    if (locHistory is not null)
+                    try
                     {
-                        locHistory.Left = item.Time;
+                        await Task.Delay(1000, cancellationToken);
                     }
+                    catch (TaskCanceledException) { }
                 }
-                return;
             }
+        }
 
-            // ワールドjoinログ
-            match = Regex.Match(item.Content, WorldJoinLogPattern);
-            if (match.Success)
+        /// <summary>
+        /// ログファイルを解析します．EOFに到達すれば処理を終了します．
+        /// </summary>
+        /// <param name="path">ファイルパス</param>
+        /// <returns></returns>
+        /// <exception cref="IOException"></exception>
+        private void ReadLogFile(string path)
+        {
+            using var reader = new StreamReader(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+            var buffer = new List<string>();
+
+            using var context = new LifelogContext();
+            while (!reader.EndOfStream)
             {
-                var worldId = Guid.Parse(match.Groups["worldId"].Value);
-                _worldId = worldId;
+                var line = reader.ReadLine();
+                if (string.IsNullOrEmpty(line))
+                {
+                    if (LogItem.TryParse(buffer.ToArray(), out var item))
+                    {
+                        context.Add(item);
+                    }
+                    buffer.Clear();
+                }
+                else
+                {
+                    buffer.Add(line);
+                }
             }
         }
-    }
 
-    internal class JoinLeaveHistory
-    {
-        public JoinLeaveHistory(string playerName, DateTime joined, bool isLocal)
+        /// <summary>
+        /// 監視対象ログファイルを変更します．
+        /// </summary>
+        /// <param name="filePath">ファイルパス</param>
+        /// <returns></returns>
+        private async Task ChangeWatchingFile(string filePath)
         {
-            PlayerName = playerName;
-            Joined = joined;
-            IsLocal = isLocal;
+            _tokenSource?.Cancel();
+            _tokenSource?.Dispose();
+            if (_readLogFileTask is not null)
+            {
+                await _readLogFileTask.ConfigureAwait(false);
+            }
+
+            _tokenSource = new CancellationTokenSource();
+            _readLogFileTask = Task.Run(async () => await WatchLogFile(filePath, _tokenSource.Token));
         }
 
-        public string PlayerName { get; set; }
-        public DateTime Joined { get; set; }
-        public DateTime? Left { get; set; }
-        public bool IsLocal { get; set; }
-
-        public override string ToString()
+        /// <summary>
+        /// ログファイルの内容監視を開始します．
+        /// </summary>
+        /// <returns></returns>
+        private async Task StartLogFileWatching()
         {
-            return $"{PlayerName} : {Joined}~{Left}";
+            var logFiles = Directory.EnumerateFiles(VRChatLogDirectory, LogFileNameFilter)
+                .Where(path => LogFileNamePattern.IsMatch(path))
+                .OrderByDescending(path => File.GetCreationTime(path))
+                .ToArray();
+            if (!logFiles.Any()) { return; }
+
+            var isVRChatRunning = IsVRChatRunning();
+
+            if (isVRChatRunning)
+            {
+                // 既存のファイルを処理
+                logFiles.Skip(1).ForEach(path => ReadLogFile(path));
+
+                // 実行中のプロセスで使用されているファイルを処理
+                var latestFile = logFiles.First();
+                await ChangeWatchingFile(latestFile);
+            }
+            else
+            {
+                logFiles.ForEach(path => ReadLogFile(path));
+            }
         }
-    }
 
-    internal class LocationHistory
-    {
-        public LocationHistory(Guid worldId, DateTime joined)
+        /// <summary>
+        /// VRChatを実行中かを判定します．
+        /// </summary>
+        /// <returns>VRChatを起動中であればtrue</returns>
+        private bool IsVRChatRunning()
         {
-            WorldId = worldId;
-            Joined = joined;
-        }
-
-        public Guid WorldId { get; set; }
-        public DateTime Joined { get; set; }
-        public DateTime? Left { get; set; }
-
-        public override string ToString()
-        {
-            return $"@{WorldId} : {Joined}~{Left}";
+            // TODO exeのパスを指定して厳密にチェックしたほうが良い
+            return System.Diagnostics.Process.GetProcessesByName("VRChat").Any();
         }
     }
 }

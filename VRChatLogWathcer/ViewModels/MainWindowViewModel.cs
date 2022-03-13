@@ -18,8 +18,7 @@ namespace VRChatLogWathcer.ViewModels
         // Some useful code snippets for ViewModel are defined as l*(llcom, llcomn, lvcomm, lsprop, etc...).
         public void Initialize()
         {
-            var wathcer = new LogWathcer(@"C:\Users\rio\AppData\LocalLow\VRChat\VRChat");
-            wathcer.Start();
+            
         }
     }
 }
