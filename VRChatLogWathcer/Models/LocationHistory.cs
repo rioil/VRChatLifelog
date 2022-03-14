@@ -7,23 +7,20 @@ using System.Threading.Tasks;
 
 namespace VRChatLogWathcer.Models
 {
-    internal class LocationHistory
+    public class LocationHistory
     {
         [Key]
         public Guid WorldId { get; set; }
+        public string WorldName { get; set; }
         [Key]
         public DateTime Joined { get; set; }
         public DateTime? Left { get; set; }
 
-        public LocationHistory(Guid worldId, DateTime joined)
+        public LocationHistory(Guid worldId, string worldName, DateTime joined)
         {
             WorldId = worldId;
+            WorldName = worldName;
             Joined = joined;
-        }
-
-        public override string ToString()
-        {
-            return $"@{WorldId} : {Joined}~{Left}";
         }
     }
 }

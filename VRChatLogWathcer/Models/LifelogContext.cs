@@ -17,7 +17,10 @@ namespace VRChatLogWathcer.Models
 
         private readonly Regex WorldJoinLogPattern = new(@"\[Behaviour\] Joining wrld_(?<worldId>[a-z\d]{8}\-[a-z\d]{4}\-[a-z\d]{4}\-[a-z\d]{4}\-[a-z\d]{12}):(\d+)(~region\(([\w]+)\))?(~([\w]+)\(usr_([\w-]+)\)((\~canRequestInvite)?)(~region\(([\w].+)\))?~nonce\((.+)\))?");
 
+        private readonly Regex RoomJoinLogPattern = new(@"\[Behaviour\] Joining or Creating Room: (?<name>.*)");
+
         private Guid _worldId;
+        private string _worldName = string.Empty;
 
         public DbSet<LocationHistory> LocationHistories { get; set; } = default!;
         public DbSet<JoinLeaveHistory> JoinLeaveHistories { get; set; } = default!;
@@ -58,7 +61,7 @@ namespace VRChatLogWathcer.Models
                     // 既に項目が存在すれば追加しない TODO:処理済みのファイルを記録するなどして，もう少し良い方法を取りたい
                     if (LocationHistories.Find(_worldId, item.Time) is null)
                     {
-                        LocationHistories.Add(new LocationHistory(_worldId, item.Time));
+                        LocationHistories.Add(new LocationHistory(_worldId, _worldName, item.Time));
                     }
                 }
 
@@ -77,7 +80,7 @@ namespace VRChatLogWathcer.Models
             if (match.Success)
             {
                 var playerName = match.Groups["player"].Value;
-                var history = JoinLeaveHistories.SingleOrDefault(h => h.PlayerName == playerName && h.Left == null);
+                var history = JoinLeaveHistories.SingleOrDefault(h => h.PlayerName == playerName && h.Joined <= item.Time && h.Left == null);
                 if (history is null) { return; }
 
                 history.Left = item.Time;
@@ -85,7 +88,7 @@ namespace VRChatLogWathcer.Models
 
                 if (history.IsLocal)
                 {
-                    var locHistory = LocationHistories.SingleOrDefault(h => h.Left == null);
+                    var locHistory = LocationHistories.SingleOrDefault(h => h.Joined <= item.Time && h.Left == null);
                     if (locHistory is not null)
                     {
                         locHistory.Left = item.Time;
@@ -97,12 +100,18 @@ namespace VRChatLogWathcer.Models
                 return;
             }
 
-            // ワールドjoinログ
+            // ワールドjoinログ（ワールドID取得）
             match = WorldJoinLogPattern.Match(item.Content);
             if (match.Success)
             {
-                var worldId = Guid.Parse(match.Groups["worldId"].Value);
-                _worldId = worldId;
+                _worldId = Guid.Parse(match.Groups["worldId"].Value);
+            }
+
+            // ルームjoinログ（ワールド名取得）
+            match = RoomJoinLogPattern.Match(item.Content);
+            if (match.Success)
+            {
+                _worldName = match.Groups["name"].Value;
             }
         }
     }
