@@ -6,9 +6,10 @@
     xmlns:l="http://schemas.livet-mvvm.net/2011/wpf"
     xmlns:v="clr-namespace:VRChatLogWathcer.Views"
     xmlns:vm="clr-namespace:VRChatLogWathcer.ViewModels"
+    xmlns:m="clr-namespace:VRChatLogWathcer.Models"
     Title="MainWindow"
-    Width="525"
-    Height="350"
+    Width="900" MinWidth="900"
+    Height="350" MinHeight="350"
     Closing="Window_Closing"
     WindowStartupLocation="CenterScreen">
 
@@ -31,5 +32,93 @@
 
     </behaviors:Interaction.Triggers>
 
-    <Grid />
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="25"/>
+        </Grid.RowDefinitions>
+
+        <Menu Grid.Row="0"/>
+
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Margin="0 2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Grid.Resources>
+                    <Style TargetType="DatePicker">
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                    </Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                    </Style>
+                </Grid.Resources>
+                
+                <!--表示期間指定-->
+                <DatePicker Grid.Column="0" SelectedDate="{Binding First}"/>
+                <TextBlock Grid.Column="1" Text="~" HorizontalAlignment="Center"/>
+                <DatePicker Grid.Column="2" SelectedDate="{Binding Last}"/>
+                
+                <!--絞り込み実行ボタン-->
+                <Button Grid.Column="3" Content="絞り込み" Command="{Binding ApplyFilterCommand}"
+                        Margin="5 0 0 0" Width="70"/>
+            </Grid>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <!--場所の履歴情報-->
+                <DataGrid Grid.Column="0"
+                      ItemsSource="{Binding LocationHistories}"
+                      SelectedItem="{Binding SelectedLocationHistory}"
+                      IsReadOnly="True"
+                      AutoGenerateColumns="False">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="World Name">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate DataType="{x:Type m:LocationHistory}">
+                                    <TextBlock Text="{Binding WorldName}" ToolTip="{Binding WorldId}" Margin="5 0"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Joined" Binding="{Binding Joined, StringFormat=yyyy/MM/dd HH:mm:ss}"/>
+                        <DataGridTextColumn Header="Left" Binding="{Binding Left, StringFormat=yyyy/MM/dd HH:mm:ss}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <GridSplitter Grid.Column="1" Width="5" VerticalAlignment="Stretch" HorizontalAlignment="Center"/>
+
+                <!--滞在プレイヤー履歴情報-->
+                <DataGrid Grid.Column="2" ItemsSource="{Binding JoinLeaveHistories}" IsReadOnly="True" AutoGenerateColumns="False">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="Name">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate DataType="{x:Type m:JoinLeaveHistory}">
+                                    <TextBlock Text="{Binding PlayerName}" Margin="5 0"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Joined" Binding="{Binding Joined, StringFormat=yyyy/MM/dd HH:mm:ss}"/>
+                        <DataGridTextColumn Header="Left" Binding="{Binding Left, StringFormat=yyyy/MM/dd HH:mm:ss}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Grid>
+
+        <StatusBar Grid.Row="2"/>
+    </Grid>
 </Window>
