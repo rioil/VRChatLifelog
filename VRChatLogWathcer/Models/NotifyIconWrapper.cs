@@ -11,7 +11,8 @@ namespace VRChatLogWathcer.Models
         /// <summary>
         /// Dispose済みか
         /// </summary>
-        private bool _disposed;
+        /// <value>Dispose済みであればtrue</value>
+        private bool _isDisposed;
 
         /// <summary>
         /// 通知バーアイコン
@@ -22,6 +23,11 @@ namespace VRChatLogWathcer.Models
         /// メイン画面
         /// </summary>
         private MainWindow? _mainWindow;
+
+        /// <summary>
+        /// メイン画面VM
+        /// </summary>
+        private MainWindowViewModel? _mainWindowViewModel;
 
         public NotifyIconWrapper()
         {
@@ -35,16 +41,19 @@ namespace VRChatLogWathcer.Models
 
         private void Dispose(bool disposing)
         {
-            if (_disposed) { return; }
+            if (_isDisposed) { return; }
 
             if (disposing)
             {
                 _notifyIcon?.Dispose();
             }
 
-            _disposed = true;
+            _isDisposed = true;
         }
 
+        /// <summary>
+        /// 通知領域アイコンを作成します．
+        /// </summary>
         [MemberNotNull(nameof(_notifyIcon))]
         private void CreateNotifyIcon()
         {
@@ -61,26 +70,40 @@ namespace VRChatLogWathcer.Models
                 ContextMenuStrip = menu,
             };
 
-            _notifyIcon.Click += (sender, e) => ShowMainWindow();
+            _notifyIcon.MouseClick += (sender, e) =>
+            {
+                if (e.Button == MouseButtons.Left)
+                {
+                    ShowMainWindow();
+                }
+            };
         }
 
+        /// <summary>
+        /// アプリケーションを終了します．
+        /// </summary>
         private void ExitApplication()
         {
             System.Windows.Application.Current.Shutdown();
         }
 
+        /// <summary>
+        /// メイン画面を表示します．
+        /// </summary>
         private void ShowMainWindow()
         {
             if (_mainWindow is null)
             {
+                _mainWindowViewModel = new MainWindowViewModel();
                 _mainWindow = new MainWindow
                 {
-                    DataContext = new MainWindowViewModel()
+                    DataContext = _mainWindowViewModel
                 };
                 _mainWindow.Show();
             }
             else if (_mainWindow.WindowState == System.Windows.WindowState.Minimized)
             {
+                _mainWindowViewModel?.Initialize();
                 _mainWindow.WindowState = System.Windows.WindowState.Normal;
                 _mainWindow.ShowInTaskbar = true;
                 _mainWindow.Activate();
