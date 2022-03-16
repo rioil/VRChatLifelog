@@ -104,7 +104,7 @@ namespace VRChatLogWathcer.ViewModels
 
             using var context = new LifelogContext();
             var items = context.LocationHistories
-                .Where(h => First <= h.Joined && h.Left < end)
+                .Where(h => First <= h.Joined && (h.Left == null || h.Left < end))
                 .OrderBy(h => h.Joined);
 
             LocationHistories = new ObservableCollection<LocationHistory>(items);
