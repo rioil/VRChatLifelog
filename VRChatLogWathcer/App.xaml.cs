@@ -1,5 +1,10 @@
 ﻿using Livet;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -8,42 +13,71 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using VRChatLogWathcer.Models;
+using VRChatLogWathcer.Views;
 
 namespace VRChatLogWathcer
 {
     public partial class App : Application
     {
-        private NotifyIconWrapper? _notifyIconWrapper;
+        private static readonly IHost _host = CreateHostBuilder().Build();
+
+        private ILogger<App> _logger = default!;
 
         [STAThread]
         public static void Main()
         {
-            App app = new();
-            app.InitializeComponent();
+            var app = new App();
             app.Run();
+        }
+
+        public static IHostBuilder CreateHostBuilder()
+        {
+            return Host.CreateDefaultBuilder()
+                .ConfigureServices(services =>
+                {
+                    services.AddDbContext<LifelogContext>();
+                    services.AddHostedService<LogWathcerService>();
+                    services.AddOptions<LogWatchOption>();
+                    services.AddHostedService<NotifyIconService>();
+
+                    services.AddSingleton<MainWindow>();
+                })
+                .ConfigureHostConfiguration(config =>
+                {
+                    config.SetBasePath(Directory.GetCurrentDirectory());
+                    config.AddJsonFile("appsettings.json", true, true);
+                })
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                    logging.SetMinimumLevel(LogLevel.Information);
+                    logging.AddNLog();
+                })
+                .UseConsoleLifetime(options => options.SuppressStatusMessages = true);
         }
 
         protected override async void OnStartup(StartupEventArgs e)
         {
-            base.OnStartup(e);
-
-            DispatcherHelper.UIDispatcher = Dispatcher;
-            //AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
-
-            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            _logger = _host.Services.GetRequiredService<ILogger<App>>();
 
             InitDb();
-            _notifyIconWrapper = new NotifyIconWrapper();
 
-            var wathcer = new LogWathcer(@"C:\Users\rio\AppData\LocalLow\VRChat\VRChat");
-            await wathcer.Start();
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            DispatcherHelper.UIDispatcher = Dispatcher;
+
+            await _host.StartAsync();
+
+            //AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+
+            base.OnStartup(e);
         }
 
-        protected override void OnExit(ExitEventArgs e)
+        protected override async void OnExit(ExitEventArgs e)
         {
-            base.OnExit(e);
+            await _host.StopAsync(TimeSpan.FromSeconds(5));
+            _host.Dispose();
 
-            _notifyIconWrapper?.Dispose();
+            base.OnExit(e);
         }
 
         // Application level error handling
@@ -61,7 +95,9 @@ namespace VRChatLogWathcer
 
         private void InitDb()
         {
-            using var context = new LifelogContext();
+            _logger.LogInformation("Initializing database...");
+
+            var context = _host.Services.GetRequiredService<LifelogContext>();
             var dir = Path.GetDirectoryName(context.DbPath);
 
             if (dir is not null)
@@ -70,6 +106,8 @@ namespace VRChatLogWathcer
             }
 
             context.Database.Migrate();
+
+            _logger.LogInformation("Database initialization completed");
         }
     }
 }

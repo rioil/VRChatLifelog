@@ -1,12 +1,15 @@
-﻿using System;
+﻿using Microsoft.Extensions.Hosting;
+using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using VRChatLogWathcer.ViewModels;
 using VRChatLogWathcer.Views;
 
 namespace VRChatLogWathcer.Models
 {
-    public sealed class NotifyIconWrapper : IDisposable
+    public sealed class NotifyIconService : BackgroundService
     {
         /// <summary>
         /// Dispose済みか
@@ -17,7 +20,7 @@ namespace VRChatLogWathcer.Models
         /// <summary>
         /// 通知バーアイコン
         /// </summary>
-        private NotifyIcon _notifyIcon;
+        private NotifyIcon? _notifyIcon;
 
         /// <summary>
         /// メイン画面
@@ -29,12 +32,13 @@ namespace VRChatLogWathcer.Models
         /// </summary>
         private MainWindowViewModel? _mainWindowViewModel;
 
-        public NotifyIconWrapper()
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             CreateNotifyIcon();
+            return Task.CompletedTask;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             Dispose(true);
         }
@@ -47,6 +51,8 @@ namespace VRChatLogWathcer.Models
             {
                 _notifyIcon?.Dispose();
             }
+
+            base.Dispose();
 
             _isDisposed = true;
         }

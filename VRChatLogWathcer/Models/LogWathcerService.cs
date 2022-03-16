@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -11,7 +15,7 @@ namespace VRChatLogWathcer.Models
     /// <summary>
     /// VRChatのログの監視を行います．
     /// </summary>
-    public class LogWathcer
+    internal class LogWathcerService : BackgroundService
     {
         /// <summary>
         /// ログディレクトリのファイル操作を監視するオブジェクト
@@ -26,13 +30,28 @@ namespace VRChatLogWathcer.Models
         /// <summary>
         /// ログファイル内容監視タスクのキャンセル用トークンソース
         /// </summary>
-        private CancellationTokenSource? _tokenSource;
+        private CancellationTokenSource? _logWatchCts;
+
+        /// <summary>
+        /// ログ監視設定
+        /// </summary>
+        private readonly LogWatchOption _settings;
+
+        /// <summary>
+        /// ライフログのDB Context
+        /// </summary>
+        private readonly LifelogContext _lifelogContext;
+
+        /// <summary>
+        /// logger
+        /// </summary>
+        private readonly ILogger<LogWathcerService> _logger;
 
         /// <summary>
         /// ログファイル名の正規表現パターン
         /// </summary>
         //lang=regex
-        private readonly Regex LogFileNamePattern = new(@"output_log_\d{2}-\d{2}-\d{2}.txt");
+        private readonly Regex LogFileNamePattern = new(@"^output_log_\d{2}-\d{2}-\d{2}.txt$");
 
         /// <summary>
         /// ログファイル名のフィルターパターン
@@ -41,30 +60,28 @@ namespace VRChatLogWathcer.Models
         private const string LogFileNameFilter = @"output_log_*.txt";
 
         /// <summary>
-        /// ログファイルのディレクトリを指定してインスタンスを作成します．
-        /// </summary>
-        /// <param name="vrchatLogDir">ログディレクトリのパス</param>
-        public LogWathcer(string vrchatLogDir)
-        {
-            VRChatLogDirectory = vrchatLogDir;
-        }
-
-        /// <summary>
-        /// VRChatのログディレクトリ
-        /// </summary>
-        public string VRChatLogDirectory { get; private set; }
-
-        /// <summary>
         /// ログ監視中か
         /// </summary>
         public bool IsWatching { get; private set; }
+
+        /// <summary>
+        /// ログファイルのディレクトリを指定してインスタンスを作成します．
+        /// </summary>
+        /// <param name="settings">ログ監視設定</param>
+        /// <param name="context">ライフログのDB Context</param>
+        public LogWathcerService(IOptions<LogWatchOption> settings, LifelogContext context, ILogger<LogWathcerService> logger)
+        {
+            _settings = settings.Value;
+            _lifelogContext = context;
+            _logger = logger;
+        }
 
         #region method
         /// <summary>
         /// ログディレクトリの監視とログファイルの読み取りを開始します．
         /// </summary>
         /// <returns></returns>
-        public async Task Start()
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             if (IsWatching) { return; }
 
@@ -78,7 +95,7 @@ namespace VRChatLogWathcer.Models
         /// ログディレクトリの監視とログファイルの読み取りを停止します．
         /// </summary>
         /// <returns></returns>
-        public async Task Stop()
+        public override async Task StopAsync(CancellationToken cancellationToken)
         {
             if (!IsWatching) { return; }
 
@@ -95,6 +112,8 @@ namespace VRChatLogWathcer.Models
         /// </summary>
         private void StartLogDirectoryWatching()
         {
+            _logger.LogInformation("Starting log directory watching...");
+
             if (_watcher is not null)
             {
                 StopLogDirectoryWatching();
@@ -103,16 +122,18 @@ namespace VRChatLogWathcer.Models
             // ログディレクトリのファイル変更監視
             _watcher = new FileSystemWatcher()
             {
-                Path = VRChatLogDirectory,
+                Path = _settings.VRChatLogDirectory,
                 Filter = LogFileNameFilter,
                 NotifyFilter = NotifyFilters.FileName,
                 IncludeSubdirectories = false,
             };
 
             _watcher.Created += (s, e) => OnFileCreated(e.FullPath);
-            //_watcher.Renamed += (s, e) => { System.Diagnostics.Debug.WriteLine($"{e.FullPath} renamed."); };
+            //_watcher.Renamed += (s, e) => { System.Diagnostics.Debug.WriteLine($"{e.FullPath} renamed"); };
 
             _watcher.EnableRaisingEvents = true;
+
+            _logger.LogInformation("Log directory watching started");
         }
 
         /// <summary>
@@ -132,9 +153,13 @@ namespace VRChatLogWathcer.Models
         /// <param name="fileFullPath">作成されたファイルのフルパス</param>
         private async void OnFileCreated(string fileFullPath)
         {
-            if (LogFileNamePattern.IsMatch(fileFullPath))
+            var fileName = Path.GetFileName(fileFullPath);
+
+            if (LogFileNamePattern.IsMatch(fileName))
             {
-                await ChangeWatchingFile(fileFullPath);
+                var absolutePath = Path.GetFullPath(fileFullPath);
+                _logger.LogInformation("New log file created : {filePath}", absolutePath);
+                await ChangeWatchingFile(absolutePath);
             }
         }
 
@@ -151,7 +176,6 @@ namespace VRChatLogWathcer.Models
             using var reader = new StreamReader(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
             var buffer = new List<string>();
 
-            using var context = new LifelogContext();
             while (true)
             {
                 if (!reader.EndOfStream)
@@ -161,7 +185,7 @@ namespace VRChatLogWathcer.Models
                     {
                         if (LogItem.TryParse(buffer.ToArray(), out var item))
                         {
-                            context.Add(item);
+                            _lifelogContext.Add(item);
                         }
                         buffer.Clear();
                     }
@@ -196,7 +220,6 @@ namespace VRChatLogWathcer.Models
             using var reader = new StreamReader(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
             var buffer = new List<string>();
 
-            using var context = new LifelogContext();
             while (!reader.EndOfStream)
             {
                 var line = reader.ReadLine();
@@ -204,7 +227,7 @@ namespace VRChatLogWathcer.Models
                 {
                     if (LogItem.TryParse(buffer.ToArray(), out var item))
                     {
-                        context.Add(item);
+                        _lifelogContext.Add(item);
                     }
                     buffer.Clear();
                 }
@@ -222,10 +245,12 @@ namespace VRChatLogWathcer.Models
         /// <returns></returns>
         private async Task ChangeWatchingFile(string filePath)
         {
+            _logger.LogInformation("Watching file changed to {filePath}", filePath);
+
             await StopLogFileWatching();
 
-            _tokenSource = new CancellationTokenSource();
-            _readLogFileTask = Task.Run(async () => await WatchLogFile(filePath, _tokenSource.Token));
+            _logWatchCts = new CancellationTokenSource();
+            _readLogFileTask = Task.Run(async () => await WatchLogFile(filePath, _logWatchCts.Token));
         }
 
         /// <summary>
@@ -234,17 +259,24 @@ namespace VRChatLogWathcer.Models
         /// <returns></returns>
         private async Task StartLogFileWatching()
         {
-            var logFiles = Directory.EnumerateFiles(VRChatLogDirectory, LogFileNameFilter)
-                .Where(path => LogFileNamePattern.IsMatch(path))
+            _logger.LogInformation("Starting log file watching...");
+
+            var logFiles = Directory.EnumerateFiles(_settings.VRChatLogDirectory, LogFileNameFilter)
+                .Where(path => LogFileNamePattern.IsMatch(Path.GetFileName(path)))
                 .OrderByDescending(path => File.GetCreationTime(path))
                 .ToArray();
-            if (!logFiles.Any()) { return; }
+            if (!logFiles.Any()) {
+                _logger.LogInformation("No log file found");
+                return;
+            }
 
             var isVRChatRunning = IsVRChatRunning();
 
             if (isVRChatRunning)
             {
                 // 既存のファイルを処理
+                _logger.LogInformation("VRChat is running now");
+                _logger.LogInformation("Reading existing log files...");
                 logFiles.Skip(1).ForEach(path => ReadLogFile(path));
 
                 // 実行中のプロセスで使用されているファイルを処理
@@ -253,7 +285,9 @@ namespace VRChatLogWathcer.Models
             }
             else
             {
+                _logger.LogInformation("Reading existing log files...");
                 logFiles.ForEach(path => ReadLogFile(path));
+                _logger.LogInformation("Reading existing log files completed");
             }
         }
 
@@ -263,9 +297,9 @@ namespace VRChatLogWathcer.Models
         /// <returns></returns>
         private async Task StopLogFileWatching()
         {
-            _tokenSource?.Cancel();
-            _tokenSource?.Dispose();
-            _tokenSource = null;
+            _logWatchCts?.Cancel();
+            _logWatchCts?.Dispose();
+            _logWatchCts = null;
 
             if (_readLogFileTask is not null)
             {
@@ -283,5 +317,19 @@ namespace VRChatLogWathcer.Models
             return System.Diagnostics.Process.GetProcessesByName("VRChat").Any();
         }
         #endregion private method
+    }
+
+    public class LogWatchOption
+    {
+        /// <summary>
+        /// VRChatのログ出力先ディレクトリ
+        /// </summary>
+        /// <remarks>
+        /// デフォルト値は
+        /// <see href="https://docs.vrchat.com/docs/frequently-asked-questions#how-do-i-find-the-vrchat-output-logs">公式ページのFAQ</see>
+        /// に従って設定
+        /// </remarks>
+        public string VRChatLogDirectory { get; set; }
+            = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"..\LocalLow\VRChat\VRChat\");
     }
 }
