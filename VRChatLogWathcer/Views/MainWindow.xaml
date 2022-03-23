@@ -30,6 +30,13 @@
 
         <!--  If you make user choose 'OK or Cancel' closing Window, then please use Window Close cancel Behavior.  -->
 
+        <!--<l:InteractionMessageTrigger>
+            <l:WindowInteractionMessageAction InvokeActionOnlyWhenWindowIsActive="False"/>
+        </l:InteractionMessageTrigger>-->
+
+        <l:InteractionMessageTrigger MessageKey="Transition" Messenger="{Binding Messenger}">
+            <l:TransitionInteractionMessageAction/>
+        </l:InteractionMessageTrigger>
     </behaviors:Interaction.Triggers>
 
     <Grid>
@@ -39,7 +46,14 @@
             <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
 
-        <Menu Grid.Row="0"/>
+        <Menu Grid.Row="0">
+            <MenuItem Header="ファイル(_F)">
+                <MenuItem Header="終了(_X)"/>
+            </MenuItem>
+            <MenuItem Header="ツール(_T)">
+                <MenuItem Header="オプション(_O)" Command="{Binding OpenSettingWindowCommand}"/>
+            </MenuItem>
+        </Menu>
 
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
@@ -63,12 +77,12 @@
                         <Setter Property="VerticalAlignment" Value="Center"/>
                     </Style>
                 </Grid.Resources>
-                
+
                 <!--表示期間指定-->
                 <DatePicker Grid.Column="0" SelectedDate="{Binding First}"/>
                 <TextBlock Grid.Column="1" Text="~" HorizontalAlignment="Center"/>
                 <DatePicker Grid.Column="2" SelectedDate="{Binding Last}"/>
-                
+
                 <!--絞り込み実行ボタン-->
                 <Button Grid.Column="3" Content="絞り込み" Command="{Binding ApplyFilterCommand}"
                         Margin="5 0 0 0" Width="70"/>
@@ -80,7 +94,7 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                
+
                 <!--場所の履歴情報-->
                 <DataGrid Grid.Column="0"
                       ItemsSource="{Binding LocationHistories}"

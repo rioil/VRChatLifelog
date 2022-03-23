@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using VRChatLogWathcer.Models;
+using VRChatLogWathcer.Views;
 
 namespace VRChatLogWathcer.ViewModels
 {
@@ -22,6 +23,11 @@ namespace VRChatLogWathcer.ViewModels
             Last = First + TimeSpan.FromDays(1);
             ApplyFilter();
         }
+
+        /// <summary>
+        /// 遷移用メッセージキー
+        /// </summary>
+        private const string TransitionMessageKey = "Transition";
 
         /// <summary>
         /// 表示期間の開始日
@@ -111,5 +117,16 @@ namespace VRChatLogWathcer.ViewModels
         }
         private ViewModelCommand? _applyFilterCommand;
         public ViewModelCommand ApplyFilterCommand => _applyFilterCommand ??= new ViewModelCommand(ApplyFilter);
+
+        /// <summary>
+        /// 設定画面を表示します．
+        /// </summary>
+        public async void OpenSettingWindow()
+        {
+            var vm = new SettingWindowViewModel();
+            await Messenger.RaiseAsync(new TransitionMessage(typeof(SettingWindow), vm, TransitionMode.Modal, TransitionMessageKey));
+        }
+        private ViewModelCommand? _openSettingWindowCommand;
+        public ViewModelCommand OpenSettingWindowCommand => _openSettingWindowCommand ??= new ViewModelCommand(OpenSettingWindow);
     }
 }
