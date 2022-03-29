@@ -7,15 +7,19 @@
     xmlns:v="clr-namespace:VRChatLogWathcer.Views"
     xmlns:vm="clr-namespace:VRChatLogWathcer.ViewModels"
     xmlns:m="clr-namespace:VRChatLogWathcer.Models"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
+    mc:Ignorable="d"
     Title="MainWindow"
     Width="900" MinWidth="900"
     Height="350" MinHeight="350"
     Closing="Window_Closing"
     WindowStartupLocation="CenterScreen">
 
-    <Window.DataContext>
-        <vm:MainWindowViewModel />
-    </Window.DataContext>
+        <!--<Window.DataContext>
+            <vm:MainWindowViewModel />
+        </Window.DataContext>-->
 
     <behaviors:Interaction.Triggers>
         <!--  When ContentRendered event raised, Initialize method of ViewModel would be called.  -->

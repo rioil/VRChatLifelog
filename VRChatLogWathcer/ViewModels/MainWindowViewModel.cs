@@ -17,6 +17,11 @@ namespace VRChatLogWathcer.ViewModels
 {
     public class MainWindowViewModel : ViewModel
     {
+        internal MainWindowViewModel(LifelogContext lifelogContext)
+        {
+            _lifelogContext = lifelogContext;
+        }
+
         public void Initialize()
         {
             First = DateTime.Today;
@@ -28,6 +33,11 @@ namespace VRChatLogWathcer.ViewModels
         /// 遷移用メッセージキー
         /// </summary>
         private const string TransitionMessageKey = "Transition";
+
+        /// <summary>
+        /// LifeLog DB
+        /// </summary>
+        private readonly LifelogContext _lifelogContext;
 
         /// <summary>
         /// 表示期間の開始日
@@ -69,18 +79,16 @@ namespace VRChatLogWathcer.ViewModels
             {
                 if (RaisePropertyChangedIfSet(ref _selectedLocationHistory, value) && value is not null)
                 {
-                    using var context = new LifelogContext();
-
                     IEnumerable<JoinLeaveHistory> items;
                     if (value.Left is null)
                     {
-                        items = context.JoinLeaveHistories
+                        items = _lifelogContext.JoinLeaveHistories
                             .Where(h => value.Joined <= h.Joined)
                             .OrderBy(h => h.Joined);
                     }
                     else
                     {
-                        items = context.JoinLeaveHistories
+                        items = _lifelogContext.JoinLeaveHistories
                             .Where(h => value.Joined <= h.Joined && h.Joined <= value.Left)
                             .OrderBy(h => h.Joined);
                     }
@@ -108,8 +116,7 @@ namespace VRChatLogWathcer.ViewModels
         {
             var end = Last + TimeSpan.FromDays(1);
 
-            using var context = new LifelogContext();
-            var items = context.LocationHistories
+            var items = _lifelogContext.LocationHistories
                 .Where(h => First <= h.Joined && (h.Left == null || h.Left < end))
                 .OrderBy(h => h.Joined);
 

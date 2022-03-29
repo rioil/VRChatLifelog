@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
@@ -31,6 +32,16 @@ namespace VRChatLogWathcer.Models
         /// メイン画面VM
         /// </summary>
         private MainWindowViewModel? _mainWindowViewModel;
+
+        /// <summary>
+        /// DIコンテナ
+        /// </summary>
+        private readonly IServiceProvider _serviceProvider;
+
+        public NotifyIconService(IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+        }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -100,7 +111,7 @@ namespace VRChatLogWathcer.Models
         {
             if (_mainWindow is null)
             {
-                _mainWindowViewModel = new MainWindowViewModel();
+                _mainWindowViewModel = new MainWindowViewModel(_serviceProvider.GetRequiredService<LifelogContext>());
                 _mainWindow = new MainWindow
                 {
                     DataContext = _mainWindowViewModel
