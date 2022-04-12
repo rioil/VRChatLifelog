@@ -59,6 +59,7 @@ namespace VRChatLogWathcer
         protected override async void OnStartup(StartupEventArgs e)
         {
             _logger = _host.Services.GetRequiredService<ILogger<App>>();
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
 
             InitDb();
 
@@ -67,7 +68,6 @@ namespace VRChatLogWathcer
 
             await _host.StartAsync();
 
-            //AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
 
             base.OnStartup(e);
         }
@@ -81,17 +81,18 @@ namespace VRChatLogWathcer
         }
 
         // Application level error handling
-        //private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
-        //{
-        //    //TODO: Logging
-        //    MessageBox.Show(
-        //        "Something errors were occurred.",
-        //        "Error",
-        //        MessageBoxButton.OK,
-        //        MessageBoxImage.Error);
-        //
-        //    Environment.Exit(1);
-        //}
+        private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            _logger.LogError(e.ExceptionObject as Exception, "error occurred");
+
+            MessageBox.Show(
+                "Something errors were occurred.",
+                "Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+
+            Environment.Exit(1);
+        }
 
         private void InitDb()
         {
