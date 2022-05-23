@@ -17,7 +17,7 @@
     Closing="Window_Closing"
     WindowStartupLocation="CenterScreen">
 
-        <!--<Window.DataContext>
+    <!--<Window.DataContext>
             <vm:MainWindowViewModel />
         </Window.DataContext>-->
 
@@ -61,36 +61,95 @@
 
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="30"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <Grid Margin="0 2">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="150"/>
-                    <ColumnDefinition Width="20"/>
-                    <ColumnDefinition Width="150"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+            <GroupBox Grid.Row="0" Header="検索条件" Margin="2 5">
+                <Grid Margin="0 5 0 0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="25"/>
+                    </Grid.RowDefinitions>
 
-                <Grid.Resources>
-                    <Style TargetType="DatePicker">
-                        <Setter Property="VerticalContentAlignment" Value="Center"/>
-                    </Style>
-                    <Style TargetType="TextBlock">
-                        <Setter Property="VerticalAlignment" Value="Center"/>
-                    </Style>
-                </Grid.Resources>
+                    <Grid.Resources>
+                        <Style TargetType="CheckBox">
+                            <Setter Property="VerticalContentAlignment" Value="Center"/>
+                            <Setter Property="Margin" Value="0 0 5 0"/>
+                            <Setter Property="ToolTip" Value="検索条件に含める"/>
+                        </Style>
+                    </Grid.Resources>
 
-                <!--表示期間指定-->
-                <DatePicker Grid.Column="0" SelectedDate="{Binding First}"/>
-                <TextBlock Grid.Column="1" Text="~" HorizontalAlignment="Center"/>
-                <DatePicker Grid.Column="2" SelectedDate="{Binding Last}"/>
+                    <Grid Grid.Row="0" Margin="0 0 0 5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
-                <!--絞り込み実行ボタン-->
-                <Button Grid.Column="3" Content="絞り込み" Command="{Binding ApplyFilterCommand}"
-                        Margin="5 0 0 0" Width="70"/>
-            </Grid>
+                        <Grid.Resources>
+                            <Style TargetType="DatePicker">
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                            </Style>
+                        </Grid.Resources>
+
+                        <!--表示期間指定-->
+                        <CheckBox Grid.Column="0" IsChecked="{Binding FilterByDate}"/>
+                        <DatePicker Grid.Column="1" SelectedDate="{Binding First}"/>
+                        <TextBlock Grid.Column="2" Text="~"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <DatePicker Grid.Column="3" SelectedDate="{Binding Last}"/>
+                    </Grid>
+
+                    <!--検索対象人物-->
+                    <Grid Grid.Row="1" Margin="0 0 0 5">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="25"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <CheckBox Grid.Column="0" IsChecked="{Binding FilterByPerson}"/>
+                        <TextBox Grid.Column="1" Text="{Binding QueriedPerson}" VerticalContentAlignment="Center"/>
+
+                        <!--あいまい検索用絞り込み-->
+                        <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding MatchedUserNames}" MaxHeight="100" IsTabStop="False">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Content="{Binding}" Padding="2" Margin="0 2 3 0" Background="Transparent"
+                                            Command="{Binding DataContext.SelectUserNameCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <!--<WrapPanel Orientation="Horizontal"/>-->
+                                    <UniformGrid Columns="6"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+
+                            <ItemsControl.Template>
+                                <ControlTemplate>
+                                    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </ControlTemplate>
+                            </ItemsControl.Template>
+                        </ItemsControl>
+                    </Grid>
+
+                    <!--絞り込み実行ボタン-->
+                    <Button Grid.Row="2" Content="絞り込み" Command="{Binding ApplyFilterCommand}" Width="200" HorizontalAlignment="Left"/>
+                </Grid>
+            </GroupBox>
 
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
@@ -101,10 +160,11 @@
 
                 <!--場所の履歴情報-->
                 <DataGrid Grid.Column="0"
-                      ItemsSource="{Binding LocationHistories}"
-                      SelectedItem="{Binding SelectedLocationHistory}"
-                      IsReadOnly="True"
-                      AutoGenerateColumns="False">
+                          ItemsSource="{Binding LocationHistories}"
+                          SelectedItem="{Binding SelectedLocationHistory}"
+                          IsReadOnly="True"
+                          AutoGenerateColumns="False"
+                          SelectionMode="Single">
                     <DataGrid.Columns>
                         <DataGridTemplateColumn Header="World Name">
                             <DataGridTemplateColumn.CellTemplate>
@@ -114,7 +174,7 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
                         <DataGridTextColumn Header="Type" Binding="{Binding Type}"/>
-                        <DataGridTextColumn Header="Joined" Binding="{Binding Joined, StringFormat=yyyy/MM/dd HH:mm:ss}"/>
+                        <DataGridTextColumn Header="Joined" Binding="{Binding Joined, StringFormat=yyyy/MM/dd HH:mm:ss}" SortDirection="Descending"/>
                         <DataGridTextColumn Header="Left" Binding="{Binding Left, StringFormat=yyyy/MM/dd HH:mm:ss}"/>
                     </DataGrid.Columns>
                 </DataGrid>

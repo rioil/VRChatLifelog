@@ -4,6 +4,7 @@ using Livet.EventListeners;
 using Livet.Messaging;
 using Livet.Messaging.IO;
 using Livet.Messaging.Windows;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -39,6 +40,7 @@ namespace VRChatLogWathcer.ViewModels
         /// </summary>
         private readonly LifelogContext _lifelogContext;
 
+        #region 変更通知プロパティ
         /// <summary>
         /// 表示期間の開始日
         /// </summary>
@@ -60,6 +62,46 @@ namespace VRChatLogWathcer.ViewModels
         private DateTime? _end;
 
         /// <summary>
+        /// 日付による絞り込みを行うか
+        /// </summary>
+        public bool FilterByDate
+        {
+            get => _filterByDate;
+            set => RaisePropertyChangedIfSet(ref _filterByDate, value);
+        }
+        private bool _filterByDate;
+
+        /// <summary>
+        /// 検索対象人物
+        /// </summary>
+        public string? QueriedPerson
+        {
+            get => _queriedPerson;
+            set => RaisePropertyChangedIfSet(ref _queriedPerson, value);
+        }
+        private string? _queriedPerson;
+
+        /// <summary>
+        /// 人物による絞り込みを行うか
+        /// </summary>
+        public bool FilterByPerson
+        {
+            get => _filterByPerson;
+            set => RaisePropertyChangedIfSet(ref _filterByPerson, value);
+        }
+        private bool _filterByPerson;
+
+        /// <summary>
+        /// あいまい検索によって一致したユーザー名
+        /// </summary>
+        public ObservableCollection<string>? MatchedUserNames
+        {
+            get => _matchedUserNames;
+            set => RaisePropertyChangedIfSet(ref _matchedUserNames, value);
+        }
+        private ObservableCollection<string>? _matchedUserNames;
+
+        /// <summary>
         /// 場所の履歴
         /// </summary>
         public ObservableCollection<LocationHistory>? LocationHistories
@@ -79,21 +121,7 @@ namespace VRChatLogWathcer.ViewModels
             {
                 if (RaisePropertyChangedIfSet(ref _selectedLocationHistory, value) && value is not null)
                 {
-                    IEnumerable<JoinLeaveHistory> items;
-                    if (value.Left is null)
-                    {
-                        items = _lifelogContext.JoinLeaveHistories
-                            .Where(h => value.Joined <= h.Joined)
-                            .OrderBy(h => h.Joined);
-                    }
-                    else
-                    {
-                        items = _lifelogContext.JoinLeaveHistories
-                            .Where(h => value.Joined <= h.Joined && h.Joined <= value.Left)
-                            .OrderBy(h => h.Joined);
-                    }
-
-                    JoinLeaveHistories = new ObservableCollection<JoinLeaveHistory>(items);
+                    UpdateJoinLeaveHistory(value);
                 }
             }
         }
@@ -108,19 +136,51 @@ namespace VRChatLogWathcer.ViewModels
             set => RaisePropertyChangedIfSet(ref _joinLeaveHistory, value);
         }
         private ObservableCollection<JoinLeaveHistory>? _joinLeaveHistory;
+        #endregion
 
+        #region コマンド
         /// <summary>
         /// 場所の履歴リストにフィルターを適用して表示項目を絞り込みます．
         /// </summary>
         public void ApplyFilter()
         {
-            var end = Last + TimeSpan.FromDays(1);
+            IQueryable<LocationHistory> result;
+            MatchedUserNames?.Clear();
+            JoinLeaveHistories?.Clear();
 
-            var items = _lifelogContext.LocationHistories
-                .Where(h => First <= h.Joined && (h.Left == null || h.Left < end))
-                .OrderBy(h => h.Joined);
+            // 対象人物による絞り込み
+            if (FilterByPerson && !string.IsNullOrEmpty(QueriedPerson))
+            {
+                // 対象人物のJoin/Leave履歴を取得
+                var joinLeaveHistories = _lifelogContext.JoinLeaveHistories
+                    .Where(h => h.PlayerName.Contains(QueriedPerson))
+                    .ToArray();
 
-            LocationHistories = new ObservableCollection<LocationHistory>(items);
+                // TODO 期間指定の反映
+                var userNames = joinLeaveHistories.Select(h => h.PlayerName).Distinct().OrderBy(name => name);
+                MatchedUserNames = new ObservableCollection<string>(userNames);
+
+                // Join/Leave情報から対応するインスタンス情報を取得
+                result = joinLeaveHistories
+                    .Select(joinleave => _lifelogContext.LocationHistories.Where(l => l.Joined <= joinleave.Joined).OrderByDescending(l => l.Joined).First())
+                    .AsQueryable();
+            }
+            else
+            {
+                result = _lifelogContext.LocationHistories.AsQueryable();
+            }
+
+            // 日付による絞り込み
+            if (FilterByDate && (First is not null || Last is not null))
+            {
+                var end = Last + TimeSpan.FromDays(1);
+
+                result = result
+                    .Where(h => First <= h.Joined && (h.Left == null || h.Left < end))
+                    .OrderBy(h => h.Joined);
+            }
+
+            LocationHistories = new ObservableCollection<LocationHistory>(result.ToArray());
         }
         private ViewModelCommand? _applyFilterCommand;
         public ViewModelCommand ApplyFilterCommand => _applyFilterCommand ??= new ViewModelCommand(ApplyFilter);
@@ -135,5 +195,40 @@ namespace VRChatLogWathcer.ViewModels
         }
         private ViewModelCommand? _openSettingWindowCommand;
         public ViewModelCommand OpenSettingWindowCommand => _openSettingWindowCommand ??= new ViewModelCommand(OpenSettingWindow);
+
+        /// <summary>
+        /// ユーザー名の選択を反映します．
+        /// </summary>
+        public void SelectUserName(string userName)
+        {
+            QueriedPerson = userName;
+            ApplyFilter();
+        }
+        private ListenerCommand<string> _selectUserNameCommand;
+        public ListenerCommand<string> SelectUserNameCommand => _selectUserNameCommand ??= new ListenerCommand<string>(SelectUserName);
+        #endregion
+
+        /// <summary>
+        /// Join/Leave履歴を更新します．
+        /// </summary>
+        /// <param name="location">場所情報</param>
+        private void UpdateJoinLeaveHistory(LocationHistory location)
+        {
+            IEnumerable<JoinLeaveHistory> items;
+            if (location.Left is null)
+            {
+                items = _lifelogContext.JoinLeaveHistories
+                    .Where(h => location.Joined <= h.Joined)
+                    .OrderBy(h => h.Joined);
+            }
+            else
+            {
+                items = _lifelogContext.JoinLeaveHistories
+                    .Where(h => location.Joined <= h.Joined && h.Joined <= location.Left)
+                    .OrderBy(h => h.Joined);
+            }
+
+            JoinLeaveHistories = new ObservableCollection<JoinLeaveHistory>(items);
+        }
     }
 }
