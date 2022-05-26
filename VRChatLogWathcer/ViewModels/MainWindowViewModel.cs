@@ -204,7 +204,7 @@ namespace VRChatLogWathcer.ViewModels
             QueriedPerson = userName;
             ApplyFilter();
         }
-        private ListenerCommand<string> _selectUserNameCommand;
+        private ListenerCommand<string>? _selectUserNameCommand;
         public ListenerCommand<string> SelectUserNameCommand => _selectUserNameCommand ??= new ListenerCommand<string>(SelectUserName);
         #endregion
 
