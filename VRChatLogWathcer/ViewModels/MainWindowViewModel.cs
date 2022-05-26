@@ -69,7 +69,7 @@ namespace VRChatLogWathcer.ViewModels
             get => _filterByDate;
             set => RaisePropertyChangedIfSet(ref _filterByDate, value);
         }
-        private bool _filterByDate;
+        private bool _filterByDate = true;
 
         /// <summary>
         /// 検索対象人物
@@ -177,7 +177,7 @@ namespace VRChatLogWathcer.ViewModels
 
                 result = result
                     .Where(h => First <= h.Joined && (h.Left == null || h.Left < end))
-                    .OrderBy(h => h.Joined);
+                    .OrderByDescending(h => h.Joined);
             }
 
             LocationHistories = new ObservableCollection<LocationHistory>(result.ToArray());
