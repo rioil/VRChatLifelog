@@ -12,6 +12,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Threading;
 using VRChatLogWathcer.Models;
 using VRChatLogWathcer.Views;
 
@@ -21,7 +22,7 @@ namespace VRChatLogWathcer
     {
         private static readonly IHost _host = CreateHostBuilder().Build();
 
-        private ILogger<App> _logger = default!;
+        private ILogger<App>? _logger;
 
         [STAThread]
         public static void Main()
@@ -67,7 +68,8 @@ namespace VRChatLogWathcer
 
             await _host.StartAsync();
 
-            //AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+            Current.Dispatcher.UnhandledException += Dispatcher_UnhandledException;
 
             base.OnStartup(e);
         }
@@ -81,21 +83,43 @@ namespace VRChatLogWathcer
         }
 
         // Application level error handling
-        //private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
-        //{
-        //    //TODO: Logging
-        //    MessageBox.Show(
-        //        "Something errors were occurred.",
-        //        "Error",
-        //        MessageBoxButton.OK,
-        //        MessageBoxImage.Error);
-        //
-        //    Environment.Exit(1);
-        //}
+        private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            MessageBox.Show(
+                $"Something errors were occurred.\n{e.ExceptionObject}",
+                "Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+
+            try
+            {
+                _logger?.LogError(e.ExceptionObject as Exception, "CurrentDomain_UnhandledException");
+            }
+            catch { }
+
+            Environment.Exit(1);
+        }
+
+        private void Dispatcher_UnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            MessageBox.Show(
+                $"Something errors were occurred.\n{e.Exception}",
+                "Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+
+            try
+            {
+                _logger?.LogError(e.Exception, "Dispatcher_UnhandledException");
+            }
+            catch { }
+
+            Environment.Exit(1);
+        }
 
         private void InitDb()
         {
-            _logger.LogInformation("Initializing database...");
+            _logger?.LogInformation("Initializing database...");
 
             var context = _host.Services.GetRequiredService<LifelogContext>();
             var dir = Path.GetDirectoryName(context.DbPath);
@@ -107,7 +131,7 @@ namespace VRChatLogWathcer
 
             context.Database.Migrate();
 
-            _logger.LogInformation("Database initialization completed");
+            _logger?.LogInformation("Database initialization completed");
         }
     }
 }
