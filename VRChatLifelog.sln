@@ -5,7 +5,7 @@ VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VRChatLogWathcer", "VRChatLogWathcer\VRChatLogWathcer.csproj", "{085F0F58-852A-40BD-9669-EFEDE826036D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VRChatLogWatcherTest", "VRChatLogWatcherTest\VRChatLogWatcherTest.csproj", "{667D8B93-548D-4F0B-8757-2D35C27A04AA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VRChatLogWatcher.Tests", "VRChatLogWatcher.Tests\VRChatLogWatcher.Tests.csproj", "{667D8B93-548D-4F0B-8757-2D35C27A04AA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
