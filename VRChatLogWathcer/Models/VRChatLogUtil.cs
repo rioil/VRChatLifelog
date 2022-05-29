@@ -10,7 +10,7 @@ public static class VRChatLogUtil
 
     private static readonly Regex PlayerLeftLogPattern = new(@"\[Behaviour\] Unregistering (?<player>.*)");
 
-    private static readonly Regex WorldJoinLogPattern = new(@"\[Behaviour\] Joining (?<worldId>wr?ld_[a-z\d]{8}\-[a-z\d]{4}\-[a-z\d]{4}\-[a-z\d]{4}\-[a-z\d]{12}):(?<instanceId>\w+)(~(?<type>[\w]+)\((?<master>(usr_[a-z\d]{8}\-[a-z\d]{4}\-[a-z\d]{4}\-[a-z\d]{4}\-[a-z\d]{12})|\w{10})\))?(?<canReqInvite>\~canRequestInvite)?(~region\((?<region>[\w]+)\))?(~nonce\((.+)\))?");
+    private static readonly Regex WorldJoinLogPattern = new(@"\[Behaviour\] Joining (?<worldId>wr?ld_[\da-fA-F]{8}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{12}):(?<instanceId>\w+)(~(?<type>[\w]+)\((?<master>(usr_[\da-fA-F]{8}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{12})|\w{10})\))?(?<canReqInvite>\~canRequestInvite)?(~region\((?<region>[\w]+)\))?(~nonce\((.+)\))?");
 
     private static readonly Regex RoomJoinLogPattern = new(@"\[Behaviour\] Joining or Creating Room: (?<name>.*)");
 
@@ -86,10 +86,15 @@ public static class VRChatLogUtil
             _ => EInstanceType.Unknown,
         };
 
-        if (!Enum.TryParse<ERegion>(match.Groups["region"].Value, true, out var eRegion))
+        var region = match.Groups["region"].Value.ToLower();
+        var eRegion = region switch
         {
-            eRegion = ERegion.Unknown;
-        }
+            "us" => ERegion.USW,
+            "use" => ERegion.USE,
+            "eu" => ERegion.EU,
+            "jp" => ERegion.JP,
+            _ => ERegion.Unknown,
+        };
 
         var master = match.Groups["master"].Value;
 
