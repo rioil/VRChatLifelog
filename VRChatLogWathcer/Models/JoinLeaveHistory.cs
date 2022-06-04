@@ -8,14 +8,19 @@ using System.Threading.Tasks;
 
 namespace VRChatLogWathcer.Models
 {
-    [Index(nameof(PlayerName), nameof(Joined), IsUnique = true)]
     public class JoinLeaveHistory
     {
-        public JoinLeaveHistory(string playerName, DateTime joined, bool isLocal)
+        public JoinLeaveHistory(string playerName, DateTime joined, bool isLocal, LocationHistory location)
+            : this(playerName, joined, isLocal, location.Id)
+        {
+        }
+
+        public JoinLeaveHistory(string playerName, DateTime joined, bool isLocal, int locationHistoryId)
         {
             PlayerName = playerName;
             Joined = joined;
             IsLocal = isLocal;
+            LocationHistoryId = locationHistoryId;
         }
 
         public int Id { get; set; }
@@ -24,7 +29,7 @@ namespace VRChatLogWathcer.Models
         public DateTime? Left { get; set; }
         public bool IsLocal { get; set; }
 
-        public int LocaionId { get; set; }
-        //public LocationHistory Location { get; set; } = default!;
+        public int LocationHistoryId { get; set; }
+        public LocationHistory LocationHistory { get; set; } = default!;
     }
 }

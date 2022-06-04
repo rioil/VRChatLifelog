@@ -118,7 +118,7 @@ namespace VRChatLogWathcer
             Environment.Exit(1);
         }
 
-        private async void InitDb()
+        private void InitDb()
         {
             _logger?.LogInformation("Initializing database...");
 
@@ -131,7 +131,6 @@ namespace VRChatLogWathcer
             }
 
             context.Database.Migrate();
-            await MigrateDbData(context);
 
             _logger?.LogInformation("Database initialization completed");
         }
@@ -158,7 +157,7 @@ namespace VRChatLogWathcer
                 var nextJoin = context.LocationHistories.FirstOrDefault(h => h.Id == location.Id + 1)?.Joined ?? DateTime.MaxValue;
                 await context.JoinLeaveHistories
                     .Where(h => lastLeft <= h.Joined && h.Left < nextJoin)
-                    .ForEachAsync(h => h.LocaionId = location.Id);
+                    .ForEachAsync(h => h.LocationHistoryId = location.Id);
                 lastLeft = location.Left!.Value;
             }
         }

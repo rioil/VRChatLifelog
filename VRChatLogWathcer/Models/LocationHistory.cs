@@ -16,7 +16,7 @@ namespace VRChatLogWathcer.Models
         public ERegion Region { get; set; }
         public string? MasterId { get; set; }
 
-        //public List<JoinLeaveHistory> JoinLeaveHistories { get; set; } = default!;
+        public List<JoinLeaveHistory> JoinLeaveHistories { get; set; } = default!;
 
         public LocationHistory(string worldId, string instanceId, DateTime joined, string worldName, EInstanceType type, ERegion region, string? masterId)
         {

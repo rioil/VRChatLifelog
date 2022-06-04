@@ -154,6 +154,7 @@ namespace VRChatLogWathcer.ViewModels
                 // 対象人物のJoin/Leave履歴を取得
                 var joinLeaveHistories = _lifelogContext.JoinLeaveHistories
                     .Where(h => h.PlayerName.Contains(QueriedPerson))
+                    .Include(h => h.LocationHistory)
                     .ToArray();
 
                 // TODO 期間指定の反映
@@ -162,7 +163,7 @@ namespace VRChatLogWathcer.ViewModels
 
                 // Join/Leave情報から対応するインスタンス情報を取得
                 result = joinLeaveHistories
-                    .Select(joinleave => _lifelogContext.LocationHistories.Where(l => l.Joined <= joinleave.Joined).OrderByDescending(l => l.Joined).First())
+                    .Select(joinleave => joinleave.LocationHistory)
                     .AsQueryable();
             }
             else
@@ -214,21 +215,8 @@ namespace VRChatLogWathcer.ViewModels
         /// <param name="location">場所情報</param>
         private void UpdateJoinLeaveHistory(LocationHistory location)
         {
-            IEnumerable<JoinLeaveHistory> items;
-            if (location.Left is null)
-            {
-                items = _lifelogContext.JoinLeaveHistories
-                    .Where(h => location.Joined <= h.Joined)
-                    .OrderBy(h => h.Joined);
-            }
-            else
-            {
-                items = _lifelogContext.JoinLeaveHistories
-                    .Where(h => location.Joined <= h.Joined && h.Joined <= location.Left)
-                    .OrderBy(h => h.Joined);
-            }
-
-            JoinLeaveHistories = new ObservableCollection<JoinLeaveHistory>(items);
+            var histories = _lifelogContext.JoinLeaveHistories.Where(h => h.LocationHistory == location).OrderBy(h => h.Joined);
+            JoinLeaveHistories = new ObservableCollection<JoinLeaveHistory>(histories);
         }
     }
 }
