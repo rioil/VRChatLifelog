@@ -22,5 +22,8 @@ namespace VRChatLogWathcer.Models
         public DateTime Joined { get; set; }
         public DateTime? Left { get; set; }
         public bool IsLocal { get; set; }
+
+        public int LocaionId { get; set; }
+        //public LocationHistory Location { get; set; }
     }
 }

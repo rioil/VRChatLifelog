@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace VRChatLogWathcer.Models
 {
     public class LocationHistory
     {
+        public int Id { get; set; }
         [Key]
         public string WorldId { get; set; }
         public string InstanceId { get; set; }
@@ -15,6 +17,8 @@ namespace VRChatLogWathcer.Models
         public EInstanceType Type { get; set; }
         public ERegion Region { get; set; }
         public string? MasterId { get; set; }
+
+        //public List<JoinLeaveHistory> JoinLeaveHistories { get; set; } = default!;
 
         public LocationHistory(string worldId, string instanceId, DateTime joined, string worldName, EInstanceType type, ERegion region, string? masterId)
         {
