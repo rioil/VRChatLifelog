@@ -6,11 +6,11 @@ namespace VRChatLogWathcer.Models
 {
     public class LocationHistory
     {
-        public int Id { get; set; }
         [Key]
+        public int Id { get; set; }
+
         public string WorldId { get; set; }
         public string InstanceId { get; set; }
-        [Key]
         public DateTime Joined { get; set; }
         public DateTime? Left { get; set; }
         public string WorldName { get; set; }

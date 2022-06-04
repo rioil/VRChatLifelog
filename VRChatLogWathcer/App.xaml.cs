@@ -145,6 +145,12 @@ namespace VRChatLogWathcer
                 location.Id = locationId++;
             }
 
+            int historyId = 1;
+            foreach(var history in context.JoinLeaveHistories.OrderBy(h => h.Joined))
+            {
+                history.Id = historyId++;
+            }
+
             // 場所履歴とJoinLeave履歴の関連付け
             DateTime lastLeft = DateTime.MinValue;
             foreach (var location in context.LocationHistories.OrderBy(h => h.Id))

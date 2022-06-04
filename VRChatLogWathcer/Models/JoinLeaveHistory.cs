@@ -16,6 +16,7 @@ namespace VRChatLogWathcer.Models
             IsLocal = isLocal;
         }
 
+        public int Id { get; set; }
         [Key]
         public string PlayerName { get; set; }
         [Key]
@@ -24,6 +25,6 @@ namespace VRChatLogWathcer.Models
         public bool IsLocal { get; set; }
 
         public int LocaionId { get; set; }
-        //public LocationHistory Location { get; set; }
+        //public LocationHistory Location { get; set; } = default!;
     }
 }
