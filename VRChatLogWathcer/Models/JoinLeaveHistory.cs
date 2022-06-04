@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace VRChatLogWathcer.Models
 {
+    [Index(nameof(PlayerName), nameof(Joined), IsUnique = true)]
     public class JoinLeaveHistory
     {
         public JoinLeaveHistory(string playerName, DateTime joined, bool isLocal)
@@ -17,9 +19,7 @@ namespace VRChatLogWathcer.Models
         }
 
         public int Id { get; set; }
-        [Key]
         public string PlayerName { get; set; }
-        [Key]
         public DateTime Joined { get; set; }
         public DateTime? Left { get; set; }
         public bool IsLocal { get; set; }

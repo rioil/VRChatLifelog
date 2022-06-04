@@ -6,9 +6,7 @@ namespace VRChatLogWathcer.Models
 {
     public class LocationHistory
     {
-        [Key]
         public int Id { get; set; }
-
         public string WorldId { get; set; }
         public string InstanceId { get; set; }
         public DateTime Joined { get; set; }
