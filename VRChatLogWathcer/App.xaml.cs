@@ -11,6 +11,7 @@ using System.Configuration;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using VRChatLogWathcer.Models;
@@ -132,6 +133,33 @@ namespace VRChatLogWathcer
             context.Database.Migrate();
 
             _logger?.LogInformation("Database initialization completed");
+        }
+
+        private async Task MigrateDbData(LifelogContext context)
+        {
+            // IDを振る
+            int locationId = 1;
+            foreach (var location in context.LocationHistories.OrderBy(h => h.Joined))
+            {
+                location.Id = locationId++;
+            }
+
+            int historyId = 1;
+            foreach(var history in context.JoinLeaveHistories.OrderBy(h => h.Joined))
+            {
+                history.Id = historyId++;
+            }
+
+            // 場所履歴とJoinLeave履歴の関連付け
+            DateTime lastLeft = DateTime.MinValue;
+            foreach (var location in context.LocationHistories.OrderBy(h => h.Id))
+            {
+                var nextJoin = context.LocationHistories.FirstOrDefault(h => h.Id == location.Id + 1)?.Joined ?? DateTime.MaxValue;
+                await context.JoinLeaveHistories
+                    .Where(h => lastLeft <= h.Joined && h.Left < nextJoin)
+                    .ForEachAsync(h => h.LocationHistoryId = location.Id);
+                lastLeft = location.Left!.Value;
+            }
         }
     }
 }

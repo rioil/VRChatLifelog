@@ -22,7 +22,12 @@ namespace VRChatLogWathcer.Models
         /// <summary>
         /// 現在のインスタンス
         /// </summary>
-        private Instance _currentInstance = default!;    // 参照される時点ではnullでない値が入っているはず
+        private Instance _currentInstance = default!;           // 参照される時点ではnullでない値が入っているはず
+
+        /// <summary>
+        /// 現在のロケーション
+        /// </summary>
+        private LocationHistory _currentLocation = default!;
 
         public DbSet<LocationHistory> LocationHistories { get; set; } = default!;
         public DbSet<JoinLeaveHistory> JoinLeaveHistories { get; set; } = default!;
@@ -39,38 +44,39 @@ namespace VRChatLogWathcer.Models
         protected override void OnConfiguring(DbContextOptionsBuilder options)
             => options.UseSqlite($"Data Source={DbPath}");
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<LocationHistory>().HasKey(e => new { e.WorldId, e.Joined });
-            modelBuilder.Entity<JoinLeaveHistory>().HasKey(e => new { e.PlayerName, e.Joined });
-        }
-
         /// <summary>
         /// ログ項目をDBの対応するテーブルに保存します．
         /// </summary>
         /// <param name="item">ログ項目</param>
         public void Add(LogItem item)
         {
+            // TODO 主キーの変更，外部キー制約の追加に対応
+
             // プレイヤーjoinログ
             if (VRChatLogUtil.TryParsePlayerJoinLog(item.Content, out var joinLog))
             {
                 if (joinLog.IsLocal)
                 {
                     // 既に項目が存在すれば追加しない TODO:処理済みのファイルを記録するなどして，もう少し良い方法を取りたい
-                    if (LocationHistories.Find(_currentInstance.WorldId, item.Time) is null)
+                    var locationHistory = LocationHistories.Where(h => h.WorldId == _currentInstance.WorldId && h.Joined == item.Time).FirstOrDefault();
+                    if (locationHistory is null)
                     {
-                        LocationHistories.Add(new LocationHistory(_currentInstance, item.Time));
+                        _currentLocation = new LocationHistory(_currentInstance, item.Time);
+                        LocationHistories.Add(_currentLocation);
+                        SaveChanges();
+                    }
+                    else
+                    {
+                        _currentLocation = locationHistory;
                     }
                 }
 
                 // 既に項目が存在すれば追加しない TODO:処理済みのファイルを記録するなどして，もう少し良い方法を取りたい
-                if (JoinLeaveHistories.Find(joinLog.PlayerName, item.Time) is null)
+                if (!JoinLeaveHistories.Where(h => h.LocationHistory == _currentLocation && h.PlayerName == joinLog.PlayerName && h.Joined == item.Time).Any())
                 {
-                    JoinLeaveHistories.Add(new JoinLeaveHistory(joinLog.PlayerName, item.Time, joinLog.IsLocal));
+                    JoinLeaveHistories.Add(new JoinLeaveHistory(joinLog.PlayerName, item.Time, joinLog.IsLocal, _currentLocation));
+                    SaveChanges();
                 }
-
-                SaveChanges();
             }
             // プレイヤーleaveログ
             else if (VRChatLogUtil.TryParsePlayerLeftLog(item.Content, out var leftLog))
