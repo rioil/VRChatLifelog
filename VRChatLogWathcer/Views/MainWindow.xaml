@@ -194,6 +194,21 @@
                         <DataGridTextColumn Header="Joined" Binding="{Binding Joined, StringFormat=yyyy/MM/dd HH:mm:ss}"/>
                         <DataGridTextColumn Header="Left" Binding="{Binding Left, StringFormat=yyyy/MM/dd HH:mm:ss}"/>
                     </DataGrid.Columns>
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Tag"
+                                    Value="{Binding DataContext.SelectUserNameCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                            <Setter Property="ContextMenu">
+                                <Setter.Value>
+                                    <ContextMenu>
+                                        <MenuItem Header="このユーザーで絞り込み"
+                                                  Command="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding PlayerName}"/>
+                                    </ContextMenu>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </DataGrid.RowStyle>
                 </DataGrid>
             </Grid>
         </Grid>
