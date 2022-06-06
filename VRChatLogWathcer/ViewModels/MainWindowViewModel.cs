@@ -174,14 +174,32 @@ namespace VRChatLogWathcer.ViewModels
             // 日付による絞り込み
             if (FilterByDate && (First is not null || Last is not null))
             {
-                var end = Last + TimeSpan.FromDays(1);
+                if (First is not null)
+                {
+                    result = result.Where(h => First <= h.Joined);
+                }
 
-                result = result
-                    .Where(h => First <= h.Joined && (h.Left == null || h.Left < end))
-                    .OrderByDescending(h => h.Joined);
+                var end = Last + TimeSpan.FromDays(1);
+                if (end is not null)
+                {
+                    if (end < DateTime.Now)
+                    {
+                        result = result.Where(h => h.Left < end);
+                    }
+                    else
+                    {
+                        result = result.Where(h => h.Left == null || h.Left < end);
+                    }
+                }
+
+                result = result.OrderByDescending(h => h.Joined);
             }
 
             LocationHistories = new ObservableCollection<LocationHistory>(result.ToArray());
+            if (SelectedLocationHistory is not null && LocationHistories.Contains(SelectedLocationHistory))
+            {
+                UpdateJoinLeaveHistory(SelectedLocationHistory);
+            }
         }
         private ViewModelCommand? _applyFilterCommand;
         public ViewModelCommand ApplyFilterCommand => _applyFilterCommand ??= new ViewModelCommand(ApplyFilter);
