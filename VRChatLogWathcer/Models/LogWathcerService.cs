@@ -213,7 +213,6 @@ namespace VRChatLogWathcer.Models
         /// ログファイルを解析します．EOFに到達すれば処理を終了します．
         /// </summary>
         /// <param name="path">ファイルパス</param>
-        /// <returns></returns>
         /// <exception cref="IOException"></exception>
         private void ReadLogFile(string path)
         {
@@ -222,6 +221,7 @@ namespace VRChatLogWathcer.Models
 
             while (!reader.EndOfStream)
             {
+                // ログの境目には空行が入るので空行で分割して解析
                 var line = reader.ReadLine();
                 if (string.IsNullOrEmpty(line))
                 {
@@ -234,6 +234,32 @@ namespace VRChatLogWathcer.Models
                 else
                 {
                     buffer.Add(line);
+                }
+            }
+
+            // ファイル終端まで読んだ後に自動修復を行う
+            RecoverCollapsedLog();
+
+            // ブルースクリーン等で異常終了した場合のための自動修復処理
+            // 退出時刻が記録されていない履歴があればファイルの最終更新日時を退出時刻として設定する
+            void RecoverCollapsedLog()
+            {
+                var lastWriteTime = File.GetLastWriteTime(path);
+                _lifelogContext.JoinLeaveHistories.Where(h => h.Left == null).ForEach(h => RecoverCollapsedJoinLeaveHistory(h));
+                _lifelogContext.LocationHistories.Where(h => h.Left == null).ForEach(h => RecoverCollapsedLocationHistory(h));
+
+                // 破損した入退出履歴を修復
+                void RecoverCollapsedJoinLeaveHistory(JoinLeaveHistory history)
+                {
+                    history.Left = lastWriteTime;
+                    _logger.LogWarning("Collapsed join/leave history (ID:{id}) was recovered.", history.Id);
+                }
+
+                // 破損したロケーション履歴を修復
+                void RecoverCollapsedLocationHistory(LocationHistory history)
+                {
+                    history.Left = lastWriteTime;
+                    _logger.LogWarning("Collapsed location history (ID:{id}) was recovered.", history.Id);
                 }
             }
         }
@@ -263,9 +289,10 @@ namespace VRChatLogWathcer.Models
 
             var logFiles = Directory.EnumerateFiles(_settings.VRChatLogDirectory, LogFileNameFilter)
                 .Where(path => LogFileNamePattern.IsMatch(Path.GetFileName(path)))
-                .OrderByDescending(path => File.GetCreationTime(path))
+                .OrderBy(path => File.GetCreationTime(path))
                 .ToArray();
-            if (!logFiles.Any()) {
+            if (!logFiles.Any())
+            {
                 _logger.LogInformation("No log file found");
                 return;
             }
@@ -277,10 +304,10 @@ namespace VRChatLogWathcer.Models
                 // 既存のファイルを処理
                 _logger.LogInformation("VRChat is running now");
                 _logger.LogInformation("Reading existing log files...");
-                logFiles.Skip(1).ForEach(path => ReadLogFile(path));
+                logFiles.SkipLast(1).ForEach(path => ReadLogFile(path));
 
                 // 実行中のプロセスで使用されているファイルを処理
-                var latestFile = logFiles.First();
+                var latestFile = logFiles.Last();
                 await ChangeWatchingFile(latestFile);
             }
             else
