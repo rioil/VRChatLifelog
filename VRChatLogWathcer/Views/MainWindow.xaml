@@ -177,6 +177,21 @@
                         <DataGridTextColumn Header="Joined" Binding="{Binding Joined, StringFormat=yyyy/MM/dd HH:mm:ss}"/>
                         <DataGridTextColumn Header="Left" Binding="{Binding Left, StringFormat=yyyy/MM/dd HH:mm:ss}"/>
                     </DataGrid.Columns>
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Tag"
+                                    Value="{Binding DataContext.ShowPicturesTakenHereCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                            <Setter Property="ContextMenu">
+                                <Setter.Value>
+                                    <ContextMenu>
+                                        <MenuItem Header="ここで撮影した写真を表示"
+                                                  Command="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding}"/>
+                                    </ContextMenu>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </DataGrid.RowStyle>
                 </DataGrid>
 
                 <GridSplitter Grid.Column="1" Width="5" VerticalAlignment="Stretch" HorizontalAlignment="Center"/>

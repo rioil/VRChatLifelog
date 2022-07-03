@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using VRChatLogWathcer.Models;
@@ -203,6 +204,19 @@ namespace VRChatLogWathcer.ViewModels
         }
         private ViewModelCommand? _applyFilterCommand;
         public ViewModelCommand ApplyFilterCommand => _applyFilterCommand ??= new ViewModelCommand(ApplyFilter);
+
+        /// <summary>
+        /// 選択された場所で撮影された写真を表示します．
+        /// </summary>
+        /// <param name="location"></param>
+        public async void ShowPicturesTakenHere(LocationHistory location)
+        {
+            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "VRChat");
+            var title = location.WorldName;
+            await SearchMsUtil.ShowImages(dir, location.Joined, location.Left, title);
+        }
+        private ListenerCommand<LocationHistory>? _showPicturesTakenHereCommand;
+        public ListenerCommand<LocationHistory> ShowPicturesTakenHereCommand => _showPicturesTakenHereCommand ??= new ListenerCommand<LocationHistory>(ShowPicturesTakenHere);
 
         /// <summary>
         /// 設定画面を表示します．
