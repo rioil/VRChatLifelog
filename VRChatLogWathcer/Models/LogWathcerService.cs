@@ -245,8 +245,8 @@ namespace VRChatLogWathcer.Models
             void RecoverCollapsedLog()
             {
                 var lastWriteTime = File.GetLastWriteTime(path);
-                _lifelogContext.JoinLeaveHistories.Where(h => h.Left == null).ForEach(h => RecoverCollapsedJoinLeaveHistory(h));
-                _lifelogContext.LocationHistories.Where(h => h.Left == null).ForEach(h => RecoverCollapsedLocationHistory(h));
+                _lifelogContext.JoinLeaveHistories.Where(h => h.Joined <= lastWriteTime && h.Left == null).ForEach(h => RecoverCollapsedJoinLeaveHistory(h));
+                _lifelogContext.LocationHistories.Where(h => h.Joined <= lastWriteTime && h.Left == null).ForEach(h => RecoverCollapsedLocationHistory(h));
 
                 // 破損した入退出履歴を修復
                 void RecoverCollapsedJoinLeaveHistory(JoinLeaveHistory history)
