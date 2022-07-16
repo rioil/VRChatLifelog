@@ -1,24 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace VRChatLogWathcer.Models
 {
     internal class LifelogContext : DbContext
     {
-        private readonly Regex PlayerJoinLogPattern = new("\\[Behaviour\\] Initialized PlayerAPI \"(?<player>.*)\" is (?<type>(remote)|(local))");
-
-        private readonly Regex PlayerLeftLogPattern = new(@"\[Behaviour\] Unregistering (?<player>.*)");
-
-        private readonly Regex WorldJoinLogPattern = new(@"\[Behaviour\] Joining (?<worldId>wr?ld_[a-z\d]{8}\-[a-z\d]{4}\-[a-z\d]{4}\-[a-z\d]{4}\-[a-z\d]{12}):(?<instanceId>\w+)(~(?<type>[\w]+)\((?<master>(usr_[a-z\d]{8}\-[a-z\d]{4}\-[a-z\d]{4}\-[a-z\d]{4}\-[a-z\d]{12})|\w{10})\))?(?<canReqInvite>\~canRequestInvite)?(~region\((?<region>[\w]+)\))?(~nonce\((.+)\))?");
-
-        private readonly Regex RoomJoinLogPattern = new(@"\[Behaviour\] Joining or Creating Room: (?<name>.*)");
-
         /// <summary>
         /// 現在のインスタンス
         /// </summary>
@@ -36,9 +24,8 @@ namespace VRChatLogWathcer.Models
 
         public LifelogContext()
         {
-            var folder = Environment.SpecialFolder.LocalApplicationData;
-            var path = Environment.GetFolderPath(folder);
-            DbPath = Path.Join(path, "VRChatLifelog", "lifelog.db");
+            var appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            DbPath = Path.Join(appDataDir, "VRChatLifelog", "lifelog.db");
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
@@ -50,8 +37,6 @@ namespace VRChatLogWathcer.Models
         /// <param name="item">ログ項目</param>
         public void Add(LogItem item)
         {
-            // TODO 主キーの変更，外部キー制約の追加に対応
-
             // プレイヤーjoinログ
             if (VRChatLogUtil.TryParsePlayerJoinLog(item.Content, out var joinLog))
             {
