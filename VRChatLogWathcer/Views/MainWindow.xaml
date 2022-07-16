@@ -228,6 +228,22 @@
             </Grid>
         </Grid>
 
-        <StatusBar Grid.Row="2"/>
+        <StatusBar Grid.Row="2">
+            <StatusBarItem DockPanel.Dock="Right">
+                <TextBlock>
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Text" Value="{Binding DataContext.WatchingFileFullPath, RelativeSource={RelativeSource AncestorType=Window}, StringFormat={}{0} を監視中}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding DataContext.WatchingFileFullPath, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
+                                    <Setter Property="Text" Value=""/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StatusBarItem>
+            <StatusBarItem/>
+        </StatusBar>
     </Grid>
 </Window>

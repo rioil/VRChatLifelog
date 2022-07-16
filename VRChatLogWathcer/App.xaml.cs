@@ -38,11 +38,12 @@ namespace VRChatLogWathcer
                 .ConfigureServices(services =>
                 {
                     services.AddDbContext<LifelogContext>();
-                    services.AddHostedService<LogWathcerService>();
+                    services.AddSingleton<LogWathcerService>();
+                    services.AddHostedService(p => p.GetRequiredService<LogWathcerService>());
                     services.AddOptions<LogWatchOption>();
                     services.AddHostedService<NotifyIconService>();
 
-                    services.AddSingleton<MainWindow>();
+                    //services.AddSingleton<MainWindow>();
                 })
                 .ConfigureHostConfiguration(config =>
                 {

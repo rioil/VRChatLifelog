@@ -111,7 +111,7 @@ namespace VRChatLogWathcer.Models
         {
             if (_mainWindow is null)
             {
-                _mainWindowViewModel = new MainWindowViewModel(_serviceProvider.GetRequiredService<LifelogContext>());
+                _mainWindowViewModel = new MainWindowViewModel(_serviceProvider);
                 _mainWindow = new MainWindow
                 {
                     DataContext = _mainWindowViewModel

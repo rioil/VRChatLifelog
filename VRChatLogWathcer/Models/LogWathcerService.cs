@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -63,6 +64,30 @@ namespace VRChatLogWathcer.Models
         /// ログ監視中か
         /// </summary>
         public bool IsWatching { get; private set; }
+
+        /// <summary>
+        /// 監視中のファイルのフルパス
+        /// </summary>
+        public string? WatchingFileFullPath
+        {
+            get => _watchingFileFullPath;
+            private set
+            {
+                if (_watchingFileFullPath == value) { return; }
+                var oldValue = _watchingFileFullPath;
+                _watchingFileFullPath = value;
+                WatchingFileChanged?.Invoke(this, new(oldValue, _watchingFileFullPath));
+            }
+        }
+        /// <summary>
+        /// <see cref="WatchingFileFullPath"/>のバッキングフィールド
+        /// </summary>
+        private string? _watchingFileFullPath;
+
+        /// <summary>
+        /// 監視対象ファイル変更時に発生するイベント
+        /// </summary>
+        public event WatchingLogFileChangedEventHandler? WatchingFileChanged;
 
         /// <summary>
         /// ログファイルのディレクトリを指定してインスタンスを作成します．
@@ -157,9 +182,8 @@ namespace VRChatLogWathcer.Models
 
             if (LogFileNamePattern.IsMatch(fileName))
             {
-                var absolutePath = Path.GetFullPath(fileFullPath);
-                _logger.LogInformation("New log file created : {filePath}", absolutePath);
-                await ChangeWatchingFile(absolutePath);
+                _logger.LogInformation("New log file created : {filePath}", fileFullPath);
+                await ChangeWatchingFile(fileFullPath);
             }
         }
 
@@ -170,42 +194,55 @@ namespace VRChatLogWathcer.Models
         /// <param name="cancellationToken">キャンセルトークン</param>
         /// <returns></returns>
         /// <exception cref="IOException"></exception>
-        /// <remarks>キャンセル要求が行われた場合，ファイルの末尾まで解析してから処理を終了します．</remarks>
+        /// <remarks>キャンセル要求が行われても，ファイルの末尾に到達するまで解析処理を続行します．</remarks>
         private async Task WatchLogFile(string path, CancellationToken cancellationToken)
         {
-            using var reader = new StreamReader(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
-            var buffer = new List<string>();
+            WatchingFileFullPath = path;
 
-            while (true)
+            try
             {
-                if (!reader.EndOfStream)
+                using var reader = new StreamReader(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+                var buffer = new List<string>();
+
+                while (true)
                 {
-                    var line = reader.ReadLine();
-                    if (string.IsNullOrEmpty(line))
+                    if (!reader.EndOfStream)
                     {
-                        if (LogItem.TryParse(buffer.ToArray(), out var item))
+                        var line = await reader.ReadLineAsync();
+                        if (string.IsNullOrEmpty(line))
                         {
-                            _lifelogContext.Add(item);
+                            if (LogItem.TryParse(buffer.ToArray(), out var item))
+                            {
+                                _lifelogContext.Add(item);
+                            }
+                            buffer.Clear();
                         }
-                        buffer.Clear();
+                        else
+                        {
+                            buffer.Add(line);
+                        }
+                    }
+                    else if (cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+                    else if (!IsVRChatRunning())
+                    {
+                        break;
                     }
                     else
                     {
-                        buffer.Add(line);
+                        try
+                        {
+                            await Task.Delay(1000, cancellationToken);
+                        }
+                        catch (TaskCanceledException) { }
                     }
                 }
-                else if (cancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
-                else
-                {
-                    try
-                    {
-                        await Task.Delay(1000, cancellationToken);
-                    }
-                    catch (TaskCanceledException) { }
-                }
+            }
+            finally
+            {
+                WatchingFileFullPath = null;
             }
         }
 
@@ -341,7 +378,9 @@ namespace VRChatLogWathcer.Models
         private bool IsVRChatRunning()
         {
             // TODO exeのパスを指定して厳密にチェックしたほうが良い
-            return System.Diagnostics.Process.GetProcessesByName("VRChat").Any();
+            var processes = Process.GetProcessesByName("VRChat");
+
+            return processes.Any();
         }
         #endregion private method
     }
@@ -357,6 +396,20 @@ namespace VRChatLogWathcer.Models
         /// に従って設定
         /// </remarks>
         public string VRChatLogDirectory { get; set; }
-            = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"..\LocalLow\VRChat\VRChat\");
+            = Path.GetFullPath(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"..\LocalLow\VRChat\VRChat\"));
     }
+
+    public class WatchingLogFileChangedEventArgs : EventArgs
+    {
+        public string? OldWatchingLogFileFullPath { get; }
+        public string? NewWatchingLogFileFullPath { get; }
+
+        public WatchingLogFileChangedEventArgs(string? oldPath, string? newPath)
+        {
+            OldWatchingLogFileFullPath = oldPath;
+            NewWatchingLogFileFullPath = newPath;
+        }
+    }
+
+    public delegate void WatchingLogFileChangedEventHandler(object sender, WatchingLogFileChangedEventArgs e);
 }

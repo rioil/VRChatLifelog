@@ -1,10 +1,12 @@
 ﻿using Livet;
 using Livet.Commands;
 using Livet.EventListeners;
+using Livet.EventListeners.WeakEvents;
 using Livet.Messaging;
 using Livet.Messaging.IO;
 using Livet.Messaging.Windows;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -19,9 +21,17 @@ namespace VRChatLogWathcer.ViewModels
 {
     public class MainWindowViewModel : ViewModel
     {
-        internal MainWindowViewModel(LifelogContext lifelogContext)
+        internal MainWindowViewModel(IServiceProvider serviceProvider)
         {
+            var lifelogContext = serviceProvider.GetRequiredService<LifelogContext>();
             _lifelogContext = lifelogContext;
+
+            _logWatcher = serviceProvider.GetRequiredService<LogWathcerService>();
+            CompositeDisposable.Add(new LivetWeakEventListener<WatchingLogFileChangedEventHandler, WatchingLogFileChangedEventArgs>(
+                h => new WatchingLogFileChangedEventHandler(h),
+                a => _logWatcher.WatchingFileChanged += a,
+                a => _logWatcher.WatchingFileChanged -= a,
+                (sender, args) => RaisePropertyChanged(nameof(WatchingFileFullPath))));
         }
 
         public void Initialize()
@@ -40,6 +50,11 @@ namespace VRChatLogWathcer.ViewModels
         /// LifeLog DB
         /// </summary>
         private readonly LifelogContext _lifelogContext;
+
+        /// <summary>
+        /// ログ監視サービス
+        /// </summary>
+        private readonly LogWathcerService _logWatcher;
 
         #region 変更通知プロパティ
         /// <summary>
@@ -137,6 +152,11 @@ namespace VRChatLogWathcer.ViewModels
             set => RaisePropertyChangedIfSet(ref _joinLeaveHistory, value);
         }
         private ObservableCollection<JoinLeaveHistory>? _joinLeaveHistory;
+
+        /// <summary>
+        /// 開始対象ファイルのフルパス
+        /// </summary>
+        public string? WatchingFileFullPath => _logWatcher.WatchingFileFullPath;
         #endregion
 
         #region コマンド
