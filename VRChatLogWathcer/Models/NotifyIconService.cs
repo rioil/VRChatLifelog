@@ -1,12 +1,14 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.Linq;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using WinForm = System.Windows.Forms;
 using VRChatLogWathcer.ViewModels;
 using VRChatLogWathcer.Views;
+using System.Windows;
 
 namespace VRChatLogWathcer.Models
 {
@@ -21,22 +23,23 @@ namespace VRChatLogWathcer.Models
         /// <summary>
         /// 通知バーアイコン
         /// </summary>
-        private NotifyIcon? _notifyIcon;
+        private WinForm.NotifyIcon? _notifyIcon;
 
         /// <summary>
         /// メイン画面
         /// </summary>
-        private MainWindow? _mainWindow;
-
-        /// <summary>
-        /// メイン画面VM
-        /// </summary>
-        private MainWindowViewModel? _mainWindowViewModel;
+        //private MainWindow? _mainWindow;
 
         /// <summary>
         /// DIコンテナ
         /// </summary>
         private readonly IServiceProvider _serviceProvider;
+
+        /// <summary>
+        /// メイン画面VM
+        /// </summary>
+        private MainWindowViewModel MainWindowViewModel => _mainWindowViewModel ??= new MainWindowViewModel(_serviceProvider);
+        private MainWindowViewModel? _mainWindowViewModel;
 
         public NotifyIconService(IServiceProvider serviceProvider)
         {
@@ -74,12 +77,12 @@ namespace VRChatLogWathcer.Models
         [MemberNotNull(nameof(_notifyIcon))]
         private void CreateNotifyIcon()
         {
-            var menu = new ContextMenuStrip();
+            var menu = new WinForm.ContextMenuStrip();
             menu.Items.Add("Exit", null, (sender, e) => ExitApplication());
             menu.Items.Add("Settings", null, (sender, e) => ShowMainWindow());
 
-            using var icon = System.Windows.Application.GetResourceStream(new Uri("Resources/icon.ico", UriKind.Relative)).Stream;
-            _notifyIcon = new NotifyIcon
+            using var icon = Application.GetResourceStream(new Uri("Resources/icon.ico", UriKind.Relative)).Stream;
+            _notifyIcon = new WinForm.NotifyIcon
             {
                 Visible = true,
                 Icon = new System.Drawing.Icon(icon),
@@ -89,7 +92,7 @@ namespace VRChatLogWathcer.Models
 
             _notifyIcon.MouseClick += (sender, e) =>
             {
-                if (e.Button == MouseButtons.Left)
+                if (e.Button == WinForm.MouseButtons.Left)
                 {
                     ShowMainWindow();
                 }
@@ -101,7 +104,7 @@ namespace VRChatLogWathcer.Models
         /// </summary>
         private void ExitApplication()
         {
-            System.Windows.Application.Current.Shutdown();
+            Application.Current.Shutdown();
         }
 
         /// <summary>
@@ -109,21 +112,19 @@ namespace VRChatLogWathcer.Models
         /// </summary>
         private void ShowMainWindow()
         {
-            if (_mainWindow is null)
+            var window = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
+
+            if (window is not null)
             {
-                _mainWindowViewModel = new MainWindowViewModel(_serviceProvider);
-                _mainWindow = new MainWindow
-                {
-                    DataContext = _mainWindowViewModel
-                };
-                _mainWindow.Show();
+                window.Activate();
             }
-            else if (_mainWindow.WindowState == System.Windows.WindowState.Minimized)
+            else
             {
-                _mainWindowViewModel?.Initialize();
-                _mainWindow.WindowState = System.Windows.WindowState.Normal;
-                _mainWindow.ShowInTaskbar = true;
-                _mainWindow.Activate();
+                window = new MainWindow
+                {
+                    DataContext = MainWindowViewModel
+                };
+                window.Show();
             }
         }
     }

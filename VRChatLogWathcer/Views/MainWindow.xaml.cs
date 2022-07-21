@@ -23,17 +23,74 @@ namespace VRChatLogWathcer.Views
      */
     public partial class MainWindow : Window
     {
+        /// <summary>
+        /// 再表示時の復元用ウィンドウ位置
+        /// </summary>
+        private static WindowLocation? WindowLocation { get; set; }
+
         public MainWindow()
         {
             InitializeComponent();
         }
 
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+
+            RecoverWindowLocation();
+        }
+
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            // ウィンドウは閉じずに最小化する
-            e.Cancel = true;
-            WindowState = WindowState.Minimized;
-            ShowInTaskbar = false;
+            SaveWindowLocation();
+        }
+
+        private void SaveWindowLocation()
+        {
+            WindowLocation = new WindowLocation(RestoreBounds, WindowState == WindowState.Maximized);
+        }
+
+        private void RecoverWindowLocation()
+        {
+            // Window状態復元
+            if (WindowLocation is not null)
+            {
+                Left = WindowLocation.Rect.Left;
+                Top = WindowLocation.Rect.Top;
+                Width = WindowLocation.Rect.Width;
+                Height = WindowLocation.Rect.Height;
+
+                if (WindowLocation.IsMaximized)
+                {
+                    WindowState = WindowState.Maximized;
+                }
+            }
+            else
+            {
+                SaveWindowLocation();
+            }
+        }
+    }
+
+    /// <summary>
+    /// ウィンドウ位置
+    /// </summary>
+    internal class WindowLocation
+    {
+        /// <summary>
+        /// <see cref="Window.RestoreBounds"/>で取得したウィンドウの位置
+        /// </summary>
+        public Rect Rect { get; set; }
+
+        /// <summary>
+        /// 最大化されていたか
+        /// </summary>
+        public bool IsMaximized { get; set; }
+
+        public WindowLocation(Rect rect, bool isMaximized)
+        {
+            Rect = rect;
+            IsMaximized = isMaximized;
         }
     }
 }
