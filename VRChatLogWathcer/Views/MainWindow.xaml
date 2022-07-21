@@ -11,7 +11,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
     mc:Ignorable="d"
-    Title="MainWindow"
+    Title="VRChat Lifelog"
     Width="900" MinWidth="900"
     Height="350" MinHeight="350"
     Closing="Window_Closing"

@@ -9,7 +9,7 @@
         d:DataContext="{d:DesignInstance Type=viewmodels:SettingWindowViewModel}"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="SettingWindow" Height="350" Width="525">
+        Title="VRChat Lifelog - 設定" Height="350" Width="525">
 
     <!--
     If you want to add a ViewModel class to DataContext, then please add your ViewModels namespace to the Window tag like below.
