@@ -97,11 +97,11 @@
                         </Grid.Resources>
 
                         <!--表示期間指定-->
-                        <CheckBox Grid.Column="0" IsChecked="{Binding FilterByDate}"/>
-                        <DatePicker Grid.Column="1" SelectedDate="{Binding First}"/>
+                        <CheckBox Grid.Column="0" IsChecked="{Binding FilterByDate}" ToolTip="日付による絞り込みを有効にする"/>
+                        <DatePicker Grid.Column="1" SelectedDate="{Binding First}" ToolTip="検索範囲の開始日付"/>
                         <TextBlock Grid.Column="2" Text="~"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <DatePicker Grid.Column="3" SelectedDate="{Binding Last}"/>
+                        <DatePicker Grid.Column="3" SelectedDate="{Binding Last}" ToolTip="検索範囲の終了日付"/>
                     </Grid>
 
                     <!--検索対象人物-->
@@ -116,8 +116,8 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <CheckBox Grid.Column="0" IsChecked="{Binding FilterByPerson}"/>
-                        <TextBox Grid.Column="1" Text="{Binding QueriedPerson}" VerticalContentAlignment="Center"/>
+                        <CheckBox Grid.Column="0" IsChecked="{Binding FilterByPerson}" ToolTip="ユーザーによる絞り込みを有効にする"/>
+                        <TextBox Grid.Column="1" Text="{Binding QueriedPerson}" VerticalContentAlignment="Center" ToolTip="ユーザー名"/>
 
                         <!--あいまい検索用絞り込み-->
                         <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding MatchedUserNames}" MaxHeight="100" IsTabStop="False">
