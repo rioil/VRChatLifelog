@@ -31,7 +31,7 @@ namespace VRChatLogWathcer.ViewModels
                 h => new WatchingLogFileChangedEventHandler(h),
                 a => _logWatcher.WatchingFileChanged += a,
                 a => _logWatcher.WatchingFileChanged -= a,
-                (sender, args) => RaisePropertyChanged(nameof(WatchingFileFullPath))));
+                (sender, args) => DispatcherHelper.UIDispatcher.Invoke(() => RaisePropertyChanged(nameof(WatchingFileFullPath)))));
         }
 
         public void Initialize()
