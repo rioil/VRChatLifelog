@@ -255,6 +255,7 @@ namespace VRChatLogWathcer.Models
         {
             using var reader = new StreamReader(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
             var buffer = new List<string>();
+            _logger.LogInformation("Reading {path}...", path);
 
             while (!reader.EndOfStream)
             {
@@ -284,11 +285,13 @@ namespace VRChatLogWathcer.Models
                 var lastWriteTime = File.GetLastWriteTime(path);
                 _lifelogContext.JoinLeaveHistories.Where(h => h.Joined <= lastWriteTime && h.Left == null).ForEach(h => RecoverCollapsedJoinLeaveHistory(h));
                 _lifelogContext.LocationHistories.Where(h => h.Joined <= lastWriteTime && h.Left == null).ForEach(h => RecoverCollapsedLocationHistory(h));
+                _lifelogContext.SaveChanges();
 
                 // 破損した入退出履歴を修復
                 void RecoverCollapsedJoinLeaveHistory(JoinLeaveHistory history)
                 {
                     history.Left = lastWriteTime;
+                    _lifelogContext.JoinLeaveHistories.Update(history);
                     _logger.LogWarning("Collapsed join/leave history (ID:{id}) was recovered.", history.Id);
                 }
 
@@ -296,6 +299,7 @@ namespace VRChatLogWathcer.Models
                 void RecoverCollapsedLocationHistory(LocationHistory history)
                 {
                     history.Left = lastWriteTime;
+                    _lifelogContext.LocationHistories.Update(history);
                     _logger.LogWarning("Collapsed location history (ID:{id}) was recovered.", history.Id);
                 }
             }
