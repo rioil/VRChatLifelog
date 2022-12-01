@@ -52,7 +52,7 @@ namespace VRChatLogWathcer.Models
         /// ログファイル名の正規表現パターン
         /// </summary>
         //lang=regex
-        private readonly Regex LogFileNamePattern = new(@"^output_log_\d{2}-\d{2}-\d{2}.txt$");
+        private readonly Regex LogFileNamePattern = new(@"^output_log_(\d{4}-\d{2}-\d{2}_)?\d{2}-\d{2}-\d{2}.txt$");
 
         /// <summary>
         /// ログファイル名のフィルターパターン

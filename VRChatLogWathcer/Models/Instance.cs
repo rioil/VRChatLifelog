@@ -28,6 +28,7 @@ namespace VRChatLogWathcer.Models
         Friends,
         InvitePlus,
         Invite,
+        Group,
         Unknown,
     }
 
