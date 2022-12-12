@@ -1,19 +1,13 @@
 ﻿using Livet;
 using Livet.Commands;
-using Livet.EventListeners;
 using Livet.EventListeners.WeakEvents;
 using Livet.Messaging;
-using Livet.Messaging.IO;
-using Livet.Messaging.Windows;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Text;
 using VRChatLogWathcer.Models;
 using VRChatLogWathcer.Views;
 
@@ -23,15 +17,13 @@ namespace VRChatLogWathcer.ViewModels
     {
         internal MainWindowViewModel(IServiceProvider serviceProvider)
         {
-            var lifelogContext = serviceProvider.GetRequiredService<LifelogContext>();
-            _lifelogContext = lifelogContext;
-
-            _logWatcher = serviceProvider.GetRequiredService<LogWathcerService>();
-            CompositeDisposable.Add(new LivetWeakEventListener<WatchingLogFileChangedEventHandler, WatchingLogFileChangedEventArgs>(
-                h => new WatchingLogFileChangedEventHandler(h),
-                a => _logWatcher.WatchingFileChanged += a,
-                a => _logWatcher.WatchingFileChanged -= a,
-                (sender, args) => DispatcherHelper.UIDispatcher.Invoke(() => RaisePropertyChanged(nameof(WatchingFileFullPath)))));
+            _logWatcher = serviceProvider.GetRequiredService<LogWatcherService>();
+            CompositeDisposable.Add(new LivetWeakEventListener<WatchingFileCountChangedEventHandler, WatchingFileCountChangedEventArgs>(
+                h => new WatchingFileCountChangedEventHandler(h),
+                a => _logWatcher.WatchingFileCountChanged += a,
+                a => _logWatcher.WatchingFileCountChanged -= a,
+                (sender, args) => DispatcherHelper.UIDispatcher.Invoke(() => WatchingFileCount = args.Count)));
+            WatchingFileCount = _logWatcher.WatchingFileCount;
         }
 
         public void Initialize()
@@ -47,14 +39,9 @@ namespace VRChatLogWathcer.ViewModels
         private const string TransitionMessageKey = "Transition";
 
         /// <summary>
-        /// LifeLog DB
-        /// </summary>
-        private readonly LifelogContext _lifelogContext;
-
-        /// <summary>
         /// ログ監視サービス
         /// </summary>
-        private readonly LogWathcerService _logWatcher;
+        private readonly LogWatcherService _logWatcher;
 
         #region 変更通知プロパティ
         /// <summary>
@@ -154,9 +141,14 @@ namespace VRChatLogWathcer.ViewModels
         private ObservableCollection<JoinLeaveHistory>? _joinLeaveHistory;
 
         /// <summary>
-        /// 開始対象ファイルのフルパス
+        /// 監視中のファイル数
         /// </summary>
-        public string? WatchingFileFullPath => _logWatcher.WatchingFileFullPath;
+        public int WatchingFileCount
+        {
+            get => _watchingFileCount;
+            set => RaisePropertyChangedIfSet(ref _watchingFileCount, value);
+        }
+        private int _watchingFileCount;
         #endregion
 
         #region コマンド
@@ -169,11 +161,12 @@ namespace VRChatLogWathcer.ViewModels
             MatchedUserNames?.Clear();
             JoinLeaveHistories?.Clear();
 
+            using var dbContext = new LifelogContext();
             // 対象人物による絞り込み
             if (FilterByPerson && !string.IsNullOrEmpty(QueriedPerson))
             {
                 // 対象人物のJoin/Leave履歴を取得
-                var joinLeaveHistories = _lifelogContext.JoinLeaveHistories
+                var joinLeaveHistories = dbContext.JoinLeaveHistories
                     .Where(h => h.PlayerName.Contains(QueriedPerson))
                     .Include(h => h.LocationHistory)
                     .ToArray();
@@ -189,7 +182,7 @@ namespace VRChatLogWathcer.ViewModels
             }
             else
             {
-                result = _lifelogContext.LocationHistories.AsQueryable();
+                result = dbContext.LocationHistories.AsQueryable();
             }
 
             // 日付による絞り込み
@@ -268,7 +261,8 @@ namespace VRChatLogWathcer.ViewModels
         /// <param name="location">場所情報</param>
         private void UpdateJoinLeaveHistory(LocationHistory location)
         {
-            var histories = _lifelogContext.JoinLeaveHistories.Where(h => h.LocationHistory == location).OrderBy(h => h.Joined);
+            using var dbContext = new LifelogContext();
+            var histories = dbContext.JoinLeaveHistories.Where(h => h.LocationHistory == location).OrderBy(h => h.Joined);
             JoinLeaveHistories = new ObservableCollection<JoinLeaveHistory>(histories);
         }
     }

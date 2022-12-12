@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using System.Text.RegularExpressions;
 
 namespace VRChatLogWathcer.Models;
@@ -11,6 +12,7 @@ public static class VRChatLogUtil
     private static readonly Regex PlayerLeftLogPattern = new(@"\[Behaviour\] Unregistering (?<player>.*)");
 
     private static readonly Regex WorldJoinLogPattern = new(@"\[Behaviour\] Joining (?<worldId>wr?ld_[\da-fA-F]{8}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{12}):(?<instanceId>\w+)(~(?<type>[\w]+)\((?<master>((usr|grp)_[\da-fA-F]{8}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{12})|\w{10})\))?(?<canReqInvite>\~canRequestInvite)?(~region\((?<region>[\w]+)\))?(~nonce\((.+)\))?");
+    private static readonly Regex LocalTestWorldJoinLogPattern = new(@"\[Behaviour\] Joining local:(?<worldId>[a-f\d]+)");
 
     private static readonly Regex RoomJoinLogPattern = new(@"\[Behaviour\] Joining or Creating Room: (?<name>.*)");
 
@@ -68,8 +70,15 @@ public static class VRChatLogUtil
         var match = WorldJoinLogPattern.Match(log);
         if (!match.Success)
         {
-            instance = null;
-            return false;
+            match = LocalTestWorldJoinLogPattern.Match(log);
+            if (!match.Success)
+            {
+                instance = null;
+                return false;
+            }
+
+            instance = new Instance(match.Groups["worldId"].Value, string.Empty, EInstanceType.Unknown, ERegion.Unknown, string.Empty);
+            return true;
         }
 
         var worldId = match.Groups["worldId"].Value;
@@ -141,4 +150,3 @@ public record PlayerLeftLog(string PlayerName);
 /// </summary>
 /// <param name="WorldName">ワールド名</param>
 public record RoomJoinLog(string WorldName);
-

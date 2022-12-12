@@ -38,8 +38,8 @@ namespace VRChatLogWathcer
                 .ConfigureServices(services =>
                 {
                     services.AddDbContext<LifelogContext>();
-                    services.AddSingleton<LogWathcerService>();
-                    services.AddHostedService(p => p.GetRequiredService<LogWathcerService>());
+                    services.AddSingleton<LogWatcherService>();
+                    services.AddHostedService(p => p.GetRequiredService<LogWatcherService>());
                     services.AddOptions<LogWatchOption>();
                     services.AddHostedService<NotifyIconService>();
 
@@ -76,9 +76,9 @@ namespace VRChatLogWathcer
             base.OnStartup(e);
         }
 
-        protected override async void OnExit(ExitEventArgs e)
+        protected override void OnExit(ExitEventArgs e)
         {
-            await _host.StopAsync(TimeSpan.FromSeconds(5));
+            _host.StopAsync(TimeSpan.FromSeconds(5)).Wait();
             _host.Dispose();
 
             base.OnExit(e);

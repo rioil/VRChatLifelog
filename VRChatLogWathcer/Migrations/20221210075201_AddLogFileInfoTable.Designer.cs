@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VRChatLogWathcer.Models;
 
@@ -10,9 +11,10 @@ using VRChatLogWathcer.Models;
 namespace VRChatLogWathcer.Migrations
 {
     [DbContext(typeof(LifelogContext))]
-    partial class LifelogContextModelSnapshot : ModelSnapshot
+    [Migration("20221210075201_AddLogFileInfoTable")]
+    partial class AddLogFileInfoTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.3");
@@ -96,9 +98,6 @@ namespace VRChatLogWathcer.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("Created")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("LastRead")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

@@ -17,233 +17,277 @@
     Closing="Window_Closing"
     WindowStartupLocation="CenterScreen">
 
-    <!--<Window.DataContext>
+  <!--<Window.DataContext>
             <vm:MainWindowViewModel />
         </Window.DataContext>-->
 
-    <behaviors:Interaction.Triggers>
-        <!--  When ContentRendered event raised, Initialize method of ViewModel would be called.  -->
-        <behaviors:EventTrigger EventName="ContentRendered">
-            <l:LivetCallMethodAction MethodName="Initialize" MethodTarget="{Binding}" />
-        </behaviors:EventTrigger>
+  <behaviors:Interaction.Triggers>
+    <!--  When ContentRendered event raised, Initialize method of ViewModel would be called.  -->
+    <behaviors:EventTrigger EventName="ContentRendered">
+      <l:LivetCallMethodAction MethodName="Initialize" MethodTarget="{Binding}" />
+    </behaviors:EventTrigger>
 
-        <!--  Dispose method is called, when Window closing.  -->
-        <behaviors:EventTrigger EventName="Closed">
-            <l:DataContextDisposeAction />
-        </behaviors:EventTrigger>
+    <!--  Dispose method is called, when Window closing.  -->
+    <behaviors:EventTrigger EventName="Closed">
+      <l:DataContextDisposeAction />
+    </behaviors:EventTrigger>
 
-        <!--  If you make user choose 'OK or Cancel' closing Window, then please use Window Close cancel Behavior.  -->
+    <!--  If you make user choose 'OK or Cancel' closing Window, then please use Window Close cancel Behavior.  -->
 
-        <!--<l:InteractionMessageTrigger>
+    <!--<l:InteractionMessageTrigger>
             <l:WindowInteractionMessageAction InvokeActionOnlyWhenWindowIsActive="False"/>
         </l:InteractionMessageTrigger>-->
 
-        <l:InteractionMessageTrigger MessageKey="Transition" Messenger="{Binding Messenger}">
-            <l:TransitionInteractionMessageAction/>
-        </l:InteractionMessageTrigger>
-    </behaviors:Interaction.Triggers>
+    <l:InteractionMessageTrigger MessageKey="Transition" Messenger="{Binding Messenger}">
+      <l:TransitionInteractionMessageAction/>
+    </l:InteractionMessageTrigger>
+  </behaviors:Interaction.Triggers>
 
-    <Grid>
-        <Grid.RowDefinitions>
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="25"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="25"/>
+    </Grid.RowDefinitions>
+
+    <Menu Grid.Row="0">
+      <MenuItem Header="ファイル(_F)">
+        <MenuItem Header="終了(_X)"/>
+      </MenuItem>
+      <MenuItem Header="ツール(_T)">
+        <MenuItem Header="オプション(_O)" Command="{Binding OpenSettingWindowCommand}"/>
+      </MenuItem>
+    </Menu>
+
+    <Grid Grid.Row="1">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+
+      <GroupBox Grid.Row="0" Header="検索条件" Margin="2 5">
+        <Grid Margin="0 5 0 0">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="25"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="25"/>
-        </Grid.RowDefinitions>
+          </Grid.RowDefinitions>
 
-        <Menu Grid.Row="0">
-            <MenuItem Header="ファイル(_F)">
-                <MenuItem Header="終了(_X)"/>
-            </MenuItem>
-            <MenuItem Header="ツール(_T)">
-                <MenuItem Header="オプション(_O)" Command="{Binding OpenSettingWindowCommand}"/>
-            </MenuItem>
-        </Menu>
+          <Grid.Resources>
+            <Style TargetType="CheckBox">
+              <Setter Property="VerticalContentAlignment" Value="Center"/>
+              <Setter Property="Margin" Value="0 0 5 0"/>
+              <Setter Property="ToolTip" Value="検索条件に含める"/>
+            </Style>
+          </Grid.Resources>
 
-        <Grid Grid.Row="1">
+          <Grid Grid.Row="0" Margin="0 0 0 5">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="150"/>
+              <ColumnDefinition Width="20"/>
+              <ColumnDefinition Width="150"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid.Resources>
+              <Style TargetType="DatePicker">
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+              </Style>
+            </Grid.Resources>
+
+            <!--表示期間指定-->
+            <CheckBox Grid.Column="0" IsChecked="{Binding FilterByDate}" ToolTip="日付による絞り込みを有効にする"/>
+            <DatePicker Grid.Column="1" SelectedDate="{Binding First}" ToolTip="検索範囲の開始日付"/>
+            <TextBlock Grid.Column="2" Text="~"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <DatePicker Grid.Column="3" SelectedDate="{Binding Last}" ToolTip="検索範囲の終了日付"/>
+          </Grid>
+
+          <!--検索対象人物-->
+          <Grid Grid.Row="1" Margin="0 0 0 5">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
+              <RowDefinition Height="25"/>
+              <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <GroupBox Grid.Row="0" Header="検索条件" Margin="2 5">
-                <Grid Margin="0 5 0 0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="25"/>
-                    </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-                    <Grid.Resources>
-                        <Style TargetType="CheckBox">
-                            <Setter Property="VerticalContentAlignment" Value="Center"/>
-                            <Setter Property="Margin" Value="0 0 5 0"/>
-                            <Setter Property="ToolTip" Value="検索条件に含める"/>
-                        </Style>
-                    </Grid.Resources>
+            <CheckBox Grid.Column="0" IsChecked="{Binding FilterByPerson}" ToolTip="ユーザーによる絞り込みを有効にする"/>
+            <TextBox Grid.Column="1" Text="{Binding QueriedPerson}" VerticalContentAlignment="Center" ToolTip="ユーザー名"/>
 
-                    <Grid Grid.Row="0" Margin="0 0 0 5">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="150"/>
-                            <ColumnDefinition Width="20"/>
-                            <ColumnDefinition Width="150"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-
-                        <Grid.Resources>
-                            <Style TargetType="DatePicker">
-                                <Setter Property="VerticalContentAlignment" Value="Center"/>
-                            </Style>
-                        </Grid.Resources>
-
-                        <!--表示期間指定-->
-                        <CheckBox Grid.Column="0" IsChecked="{Binding FilterByDate}" ToolTip="日付による絞り込みを有効にする"/>
-                        <DatePicker Grid.Column="1" SelectedDate="{Binding First}" ToolTip="検索範囲の開始日付"/>
-                        <TextBlock Grid.Column="2" Text="~"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <DatePicker Grid.Column="3" SelectedDate="{Binding Last}" ToolTip="検索範囲の終了日付"/>
-                    </Grid>
-
-                    <!--検索対象人物-->
-                    <Grid Grid.Row="1" Margin="0 0 0 5">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="25"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <CheckBox Grid.Column="0" IsChecked="{Binding FilterByPerson}" ToolTip="ユーザーによる絞り込みを有効にする"/>
-                        <TextBox Grid.Column="1" Text="{Binding QueriedPerson}" VerticalContentAlignment="Center" ToolTip="ユーザー名"/>
-
-                        <!--あいまい検索用絞り込み-->
-                        <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding MatchedUserNames}" MaxHeight="100" IsTabStop="False">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Button Content="{Binding}" Padding="2" Margin="0 2 3 0" Background="Transparent"
+            <!--あいまい検索用絞り込み-->
+            <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding MatchedUserNames}" MaxHeight="100" IsTabStop="False">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Button Content="{Binding}" Padding="2" Margin="0 2 3 0" Background="Transparent"
                                             Command="{Binding DataContext.SelectUserNameCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                             CommandParameter="{Binding}"/>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
 
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <!--<WrapPanel Orientation="Horizontal"/>-->
-                                    <UniformGrid Columns="6"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <!--<WrapPanel Orientation="Horizontal"/>-->
+                  <UniformGrid Columns="6"/>
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
 
-                            <ItemsControl.Template>
-                                <ControlTemplate>
-                                    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                                        <ItemsPresenter/>
-                                    </ScrollViewer>
-                                </ControlTemplate>
-                            </ItemsControl.Template>
-                        </ItemsControl>
-                    </Grid>
+              <ItemsControl.Template>
+                <ControlTemplate>
+                  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <ItemsPresenter/>
+                  </ScrollViewer>
+                </ControlTemplate>
+              </ItemsControl.Template>
+            </ItemsControl>
+          </Grid>
 
-                    <!--絞り込み実行ボタン-->
-                    <Button Grid.Row="2" Content="絞り込み" Command="{Binding ApplyFilterCommand}" Width="200" HorizontalAlignment="Left"/>
-                </Grid>
-            </GroupBox>
+          <!--ワールド名検索-->
+          <!--TODO-->
+          <Grid Grid.Row="2" Margin="0 0 0 5">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="25"/>
+              <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-            <Grid Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-                <!--場所の履歴情報-->
-                <DataGrid Grid.Column="0"
+            <CheckBox Grid.Column="0" IsChecked="{Binding FilterByPerson}" ToolTip="ワールドによる絞り込みを有効にする"/>
+            <TextBox Grid.Column="1" Text="{Binding QueriedPerson}" VerticalContentAlignment="Center" ToolTip="ワールド名"/>
+
+            <!--あいまい検索用絞り込み-->
+            <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding MatchedUserNames}" MaxHeight="100" IsTabStop="False">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Button Content="{Binding}" Padding="2" Margin="0 2 3 0" Background="Transparent"
+                                            Command="{Binding DataContext.SelectUserNameCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"/>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <!--<WrapPanel Orientation="Horizontal"/>-->
+                  <UniformGrid Columns="6"/>
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+
+              <ItemsControl.Template>
+                <ControlTemplate>
+                  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <ItemsPresenter/>
+                  </ScrollViewer>
+                </ControlTemplate>
+              </ItemsControl.Template>
+            </ItemsControl>
+          </Grid>
+
+          <!--絞り込み実行ボタン-->
+          <Button Grid.Row="3" Content="絞り込み" Command="{Binding ApplyFilterCommand}" Width="200" HorizontalAlignment="Left"/>
+        </Grid>
+      </GroupBox>
+
+      <Grid Grid.Row="1">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!--場所の履歴情報-->
+        <DataGrid Grid.Column="0"
                           ItemsSource="{Binding LocationHistories}"
                           SelectedItem="{Binding SelectedLocationHistory}"
                           IsReadOnly="True"
                           AutoGenerateColumns="False"
                           SelectionMode="Single">
-                    <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="World Name">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate DataType="{x:Type m:LocationHistory}">
-                                    <TextBlock Text="{Binding WorldName}" ToolTip="{Binding WorldId}" Margin="5 0"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="Type" Binding="{Binding Type}"/>
-                        <DataGridTextColumn Header="Joined" Binding="{Binding Joined, StringFormat=yyyy/MM/dd HH:mm:ss}"/>
-                        <DataGridTextColumn Header="Left" Binding="{Binding Left, StringFormat=yyyy/MM/dd HH:mm:ss}"/>
-                    </DataGrid.Columns>
-                    <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow">
-                            <Setter Property="Tag"
+          <DataGrid.Columns>
+            <DataGridTemplateColumn Header="World Name">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate DataType="{x:Type m:LocationHistory}">
+                  <TextBlock Text="{Binding WorldName}" ToolTip="{Binding WorldId}" Margin="5 0"/>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTextColumn Header="Type" Binding="{Binding Type}"/>
+            <DataGridTextColumn Header="Joined" Binding="{Binding Joined, StringFormat=yyyy/MM/dd HH:mm:ss}"/>
+            <DataGridTextColumn Header="Left" Binding="{Binding Left, StringFormat=yyyy/MM/dd HH:mm:ss}"/>
+          </DataGrid.Columns>
+          <DataGrid.RowStyle>
+            <Style TargetType="DataGridRow">
+              <Setter Property="Tag"
                                     Value="{Binding DataContext.ShowPicturesTakenHereCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                            <Setter Property="ContextMenu">
-                                <Setter.Value>
-                                    <ContextMenu>
-                                        <MenuItem Header="ここで撮影した写真を表示"
+              <Setter Property="ContextMenu">
+                <Setter.Value>
+                  <ContextMenu>
+                    <MenuItem Header="ここで撮影した写真を表示"
                                                   Command="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                   CommandParameter="{Binding}"/>
-                                    </ContextMenu>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </DataGrid.RowStyle>
-                </DataGrid>
+                  </ContextMenu>
+                </Setter.Value>
+              </Setter>
+            </Style>
+          </DataGrid.RowStyle>
+        </DataGrid>
 
-                <GridSplitter Grid.Column="1" Width="5" VerticalAlignment="Stretch" HorizontalAlignment="Center"/>
+        <GridSplitter Grid.Column="1" Width="5" VerticalAlignment="Stretch" HorizontalAlignment="Center"/>
 
-                <!--滞在プレイヤー履歴情報-->
-                <DataGrid Grid.Column="2" ItemsSource="{Binding JoinLeaveHistories}" IsReadOnly="True" AutoGenerateColumns="False">
-                    <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="Name">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate DataType="{x:Type m:JoinLeaveHistory}">
-                                    <TextBlock Text="{Binding PlayerName}" Margin="5 0"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="Joined" Binding="{Binding Joined, StringFormat=yyyy/MM/dd HH:mm:ss}"/>
-                        <DataGridTextColumn Header="Left" Binding="{Binding Left, StringFormat=yyyy/MM/dd HH:mm:ss}"/>
-                    </DataGrid.Columns>
-                    <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow">
-                            <Setter Property="Tag"
+        <!--滞在プレイヤー履歴情報-->
+        <DataGrid Grid.Column="2" ItemsSource="{Binding JoinLeaveHistories}" IsReadOnly="True" AutoGenerateColumns="False">
+          <DataGrid.Columns>
+            <DataGridTemplateColumn Header="Name">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate DataType="{x:Type m:JoinLeaveHistory}">
+                  <TextBlock Text="{Binding PlayerName}" Margin="5 0"/>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTextColumn Header="Joined" Binding="{Binding Joined, StringFormat=yyyy/MM/dd HH:mm:ss}"/>
+            <DataGridTextColumn Header="Left" Binding="{Binding Left, StringFormat=yyyy/MM/dd HH:mm:ss}"/>
+          </DataGrid.Columns>
+          <DataGrid.RowStyle>
+            <Style TargetType="DataGridRow">
+              <Setter Property="Tag"
                                     Value="{Binding DataContext.SelectUserNameCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                            <Setter Property="ContextMenu">
-                                <Setter.Value>
-                                    <ContextMenu>
-                                        <MenuItem Header="このユーザーで絞り込み"
+              <Setter Property="ContextMenu">
+                <Setter.Value>
+                  <ContextMenu>
+                    <MenuItem Header="このユーザーで絞り込み"
                                                   Command="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                   CommandParameter="{Binding PlayerName}"/>
-                                    </ContextMenu>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </DataGrid.RowStyle>
-                </DataGrid>
-            </Grid>
-        </Grid>
-
-        <StatusBar Grid.Row="2">
-            <StatusBarItem DockPanel.Dock="Right">
-                <TextBlock>
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Text" Value="{Binding DataContext.WatchingFileFullPath, RelativeSource={RelativeSource AncestorType=Window}, StringFormat={}{0} を監視中}"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding DataContext.WatchingFileFullPath, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
-                                    <Setter Property="Text" Value=""/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
-            </StatusBarItem>
-            <StatusBarItem/>
-        </StatusBar>
+                  </ContextMenu>
+                </Setter.Value>
+              </Setter>
+            </Style>
+          </DataGrid.RowStyle>
+        </DataGrid>
+      </Grid>
     </Grid>
+
+    <StatusBar Grid.Row="2">
+      <StatusBarItem DockPanel.Dock="Right">
+        <TextBlock>
+          <TextBlock.Style>
+            <Style TargetType="TextBlock">
+              <Setter Property="Text" Value="{Binding DataContext.WatchingFileCount, RelativeSource={RelativeSource AncestorType=Window}, StringFormat={}{0} 個のログファイルを監視中}"/>
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.WatchingFileCount, RelativeSource={RelativeSource AncestorType=Window}}" Value="0">
+                  <Setter Property="Text" Value=""/>
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </TextBlock.Style>
+        </TextBlock>
+      </StatusBarItem>
+      <StatusBarItem/>
+    </StatusBar>
+  </Grid>
 </Window>

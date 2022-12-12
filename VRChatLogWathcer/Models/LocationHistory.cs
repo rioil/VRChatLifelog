@@ -16,9 +16,12 @@ namespace VRChatLogWathcer.Models
         public ERegion Region { get; set; }
         public string? MasterId { get; set; }
 
+        public int LogFileInfoId { get; set; }
+        public VRChatLogFileInfo LogFileInfo { get; set; } = default!;
+
         public List<JoinLeaveHistory> JoinLeaveHistories { get; set; } = default!;
 
-        public LocationHistory(string worldId, string instanceId, DateTime joined, string worldName, EInstanceType type, ERegion region, string? masterId)
+        public LocationHistory(string worldId, string instanceId, DateTime joined, string worldName, EInstanceType type, ERegion region, string? masterId, int logFileInfoId)
         {
             WorldId = worldId;
             InstanceId = instanceId;
@@ -27,10 +30,17 @@ namespace VRChatLogWathcer.Models
             Type = type;
             Region = region;
             MasterId = masterId;
+            LogFileInfoId = logFileInfoId;
         }
 
-        public LocationHistory(Instance instance, DateTime joined)
-            : this(instance.WorldId, instance.InstanceId, joined, instance.WorldName, instance.Type, instance.Region, instance.MasterId)
+        public LocationHistory(string worldId, string instanceId, DateTime joined, string worldName, EInstanceType type, ERegion region, string? masterId, VRChatLogFileInfo logFileInfo)
+            : this(worldId, instanceId, joined, worldName, type, region, masterId, logFileInfo.Id)
+        {
+            LogFileInfo = logFileInfo;
+        }
+
+        public LocationHistory(Instance instance, DateTime joined, VRChatLogFileInfo logFileInfo)
+            : this(instance.WorldId, instance.InstanceId, joined, instance.WorldName, instance.Type, instance.Region, instance.MasterId, logFileInfo)
         {
         }
     }
