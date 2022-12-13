@@ -184,7 +184,7 @@ namespace VRChatLogWathcer.Models
             {
                 try
                 {
-                    return new StreamReader(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+                    return new StreamReader(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete));
                 }
                 catch (FileNotFoundException)
                 {
