@@ -128,6 +128,7 @@ namespace VRChatLogWathcer.ViewModels
         {
             IQueryable<LocationHistory> result;
             MatchedUserNames.Value?.Clear();
+            MatchedWorldNames.Value?.Clear();
             JoinLeaveHistories.Value?.Clear();
 
             using var dbContext = new LifelogContext();
