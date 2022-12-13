@@ -13,7 +13,7 @@
     mc:Ignorable="d"
     Title="VRChat Lifelog"
     Width="900" MinWidth="900"
-    Height="350" MinHeight="350"
+    Height="600" MinHeight="350"
     Closing="Window_Closing"
     WindowStartupLocation="CenterScreen">
 
@@ -100,8 +100,8 @@
             <!--表示期間指定-->
             <CheckBox Grid.Column="0" IsChecked="{Binding FilterByDate.Value}" ToolTip="日付による絞り込みを有効にする"/>
             <DatePicker Grid.Column="1" SelectedDate="{Binding First.Value}" ToolTip="検索範囲の開始日付"/>
-            <TextBlock Grid.Column="2" Text="~"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="2" Text="~" 
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
             <DatePicker Grid.Column="3" SelectedDate="{Binding Last.Value}" ToolTip="検索範囲の終了日付"/>
           </Grid>
 
@@ -125,8 +125,8 @@
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
                   <Button Content="{Binding}" Padding="2" Margin="0 2 3 0" Background="Transparent"
-                                            Command="{Binding DataContext.SelectUserNameCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                            CommandParameter="{Binding}"/>
+                          Command="{Binding DataContext.SelectUserNameCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                          CommandParameter="{Binding}"/>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
 
@@ -203,11 +203,11 @@
 
         <!--場所の履歴情報-->
         <DataGrid Grid.Column="0"
-                          ItemsSource="{Binding LocationHistories.Value}"
-                          SelectedItem="{Binding SelectedLocationHistory.Value}"
-                          IsReadOnly="True"
-                          AutoGenerateColumns="False"
-                          SelectionMode="Single">
+                  ItemsSource="{Binding LocationHistories.Value}"
+                  SelectedItem="{Binding SelectedLocationHistory.Value}"
+                  IsReadOnly="True"
+                  AutoGenerateColumns="False"
+                  SelectionMode="Single">
           <DataGrid.Columns>
             <DataGridTemplateColumn Header="World Name">
               <DataGridTemplateColumn.CellTemplate>
@@ -223,13 +223,13 @@
           <DataGrid.RowStyle>
             <Style TargetType="DataGridRow">
               <Setter Property="Tag"
-                                    Value="{Binding DataContext.ShowPicturesTakenHereCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                      Value="{Binding DataContext.ShowPicturesTakenHereCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
               <Setter Property="ContextMenu">
                 <Setter.Value>
                   <ContextMenu>
                     <MenuItem Header="ここで撮影した写真を表示"
-                                                  Command="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                                  CommandParameter="{Binding}"/>
+                              Command="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                              CommandParameter="{Binding}"/>
                   </ContextMenu>
                 </Setter.Value>
               </Setter>
@@ -255,7 +255,7 @@
           <DataGrid.RowStyle>
             <Style TargetType="DataGridRow">
               <Setter Property="Tag"
-                                    Value="{Binding DataContext.SelectUserNameCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                      Value="{Binding DataContext.SelectUserNameCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
               <Setter Property="ContextMenu">
                 <Setter.Value>
                   <ContextMenu>
