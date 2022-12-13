@@ -31,6 +31,8 @@
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
 		<PackageReference Include="NLog" Version="5.0.0" />
 		<PackageReference Include="NLog.Extensions.Logging" Version="5.0.0" />
+		<PackageReference Include="ReactiveProperty" Version="8.2.0" />
+		<PackageReference Include="ReactiveProperty.Core" Version="8.2.0" />
 	</ItemGroup>
 
 	<ItemGroup>

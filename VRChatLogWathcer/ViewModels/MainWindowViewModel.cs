@@ -4,6 +4,7 @@ using Livet.EventListeners.WeakEvents;
 using Livet.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Reactive.Bindings;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -22,14 +23,23 @@ namespace VRChatLogWathcer.ViewModels
                 h => new WatchingFileCountChangedEventHandler(h),
                 a => _logWatcher.WatchingFileCountChanged += a,
                 a => _logWatcher.WatchingFileCountChanged -= a,
-                (sender, args) => DispatcherHelper.UIDispatcher.Invoke(() => WatchingFileCount = args.Count)));
-            WatchingFileCount = _logWatcher.WatchingFileCount;
+                (sender, args) => DispatcherHelper.UIDispatcher.Invoke(() => WatchingFileCount.Value = args.Count)));
+            WatchingFileCount.Value = _logWatcher.WatchingFileCount;
+
+            SelectedLocationHistory = new ReactivePropertySlim<LocationHistory?>();
+            CompositeDisposable.Add(SelectedLocationHistory.Subscribe(x =>
+            {
+                if (SelectedLocationHistory.Value is not null)
+                {
+                    UpdateJoinLeaveHistory(SelectedLocationHistory.Value);
+                }
+            }));
         }
 
         public void Initialize()
         {
-            First = DateTime.Today;
-            Last = First + TimeSpan.FromDays(1);
+            First.Value = DateTime.Today;
+            Last.Value = First.Value + TimeSpan.FromDays(1);
             ApplyFilter();
         }
 
@@ -47,133 +57,92 @@ namespace VRChatLogWathcer.ViewModels
         /// <summary>
         /// 表示期間の開始日
         /// </summary>
-        public DateTime? First
-        {
-            get => _start;
-            set => RaisePropertyChangedIfSet(ref _start, value);
-        }
-        private DateTime? _start;
+        public ReactivePropertySlim<DateTime?> First { get; } = new();
 
         /// <summary>
         /// 表示期間の終了日
         /// </summary>
-        public DateTime? Last
-        {
-            get => _end;
-            set => RaisePropertyChangedIfSet(ref _end, value);
-        }
-        private DateTime? _end;
+        public ReactivePropertySlim<DateTime?> Last { get; } = new();
 
         /// <summary>
         /// 日付による絞り込みを行うか
         /// </summary>
-        public bool FilterByDate
-        {
-            get => _filterByDate;
-            set => RaisePropertyChangedIfSet(ref _filterByDate, value);
-        }
-        private bool _filterByDate = true;
+        public ReactivePropertySlim<bool> FilterByDate { get; } = new(true);
 
         /// <summary>
         /// 検索対象人物
         /// </summary>
-        public string? QueriedPerson
-        {
-            get => _queriedPerson;
-            set => RaisePropertyChangedIfSet(ref _queriedPerson, value);
-        }
-        private string? _queriedPerson;
+        public ReactivePropertySlim<string?> PersonQuery { get; } = new();
 
         /// <summary>
         /// 人物による絞り込みを行うか
         /// </summary>
-        public bool FilterByPerson
-        {
-            get => _filterByPerson;
-            set => RaisePropertyChangedIfSet(ref _filterByPerson, value);
-        }
-        private bool _filterByPerson;
+        public ReactivePropertySlim<bool> FilterByPerson { get; } = new();
 
         /// <summary>
         /// あいまい検索によって一致したユーザー名
         /// </summary>
-        public ObservableCollection<string>? MatchedUserNames
-        {
-            get => _matchedUserNames;
-            set => RaisePropertyChangedIfSet(ref _matchedUserNames, value);
-        }
-        private ObservableCollection<string>? _matchedUserNames;
+        public ReactivePropertySlim<ObservableCollection<string>?> MatchedUserNames { get; } = new();
+
+        /// <summary>
+        /// ワールド名のクエリ
+        /// </summary>
+        public ReactivePropertySlim<string> WorldNameQuery { get; } = new();
+
+        /// <summary>
+        /// ワールド名による絞り込みを行うか
+        /// </summary>
+        public ReactivePropertySlim<bool> FilterByWorldName { get; } = new();
+
+        /// <summary>
+        /// あいまい検索によって一致したワールド名
+        /// </summary>
+        public ReactivePropertySlim<ObservableCollection<string>?> MatchedWorldNames { get; } = new();
 
         /// <summary>
         /// 場所の履歴
         /// </summary>
-        public ObservableCollection<LocationHistory>? LocationHistories
-        {
-            get => _locationHistories;
-            set => RaisePropertyChangedIfSet(ref _locationHistories, value);
-        }
-        private ObservableCollection<LocationHistory>? _locationHistories;
+        public ReactivePropertySlim<ObservableCollection<LocationHistory>?> LocationHistories { get; } = new();
 
         /// <summary>
         /// 選択された場所
         /// </summary>
-        public LocationHistory? SelectedLocationHistory
-        {
-            get => _selectedLocationHistory;
-            set
-            {
-                if (RaisePropertyChangedIfSet(ref _selectedLocationHistory, value) && value is not null)
-                {
-                    UpdateJoinLeaveHistory(value);
-                }
-            }
-        }
-        private LocationHistory? _selectedLocationHistory;
+        public ReactivePropertySlim<LocationHistory?> SelectedLocationHistory { get; }
 
         /// <summary>
         /// 滞在プレイヤーの履歴
         /// </summary>
-        public ObservableCollection<JoinLeaveHistory>? JoinLeaveHistories
-        {
-            get => _joinLeaveHistory;
-            set => RaisePropertyChangedIfSet(ref _joinLeaveHistory, value);
-        }
-        private ObservableCollection<JoinLeaveHistory>? _joinLeaveHistory;
+        public ReactivePropertySlim<ObservableCollection<JoinLeaveHistory>?> JoinLeaveHistories { get; } = new();
 
         /// <summary>
         /// 監視中のファイル数
         /// </summary>
-        public int WatchingFileCount
-        {
-            get => _watchingFileCount;
-            set => RaisePropertyChangedIfSet(ref _watchingFileCount, value);
-        }
-        private int _watchingFileCount;
+        public ReactivePropertySlim<int> WatchingFileCount { get; } = new();
         #endregion
 
         #region コマンド
         /// <summary>
         /// 場所の履歴リストにフィルターを適用して表示項目を絞り込みます．
         /// </summary>
-        public void ApplyFilter()
+        public async void ApplyFilter()
         {
             IQueryable<LocationHistory> result;
-            MatchedUserNames?.Clear();
-            JoinLeaveHistories?.Clear();
+            MatchedUserNames.Value?.Clear();
+            JoinLeaveHistories.Value?.Clear();
 
             using var dbContext = new LifelogContext();
             // 対象人物による絞り込み
-            if (FilterByPerson && !string.IsNullOrEmpty(QueriedPerson))
+            if (FilterByPerson.Value && !string.IsNullOrEmpty(PersonQuery.Value))
             {
                 // 対象人物のJoin/Leave履歴を取得
-                var joinLeaveHistories = dbContext.JoinLeaveHistories
-                    .Where(h => h.PlayerName.Contains(QueriedPerson))
+                var joinLeaveHistories = await dbContext.JoinLeaveHistories
+                    .Where(h => h.PlayerName.Contains(PersonQuery.Value))
                     .Include(h => h.LocationHistory)
-                    .ToArray();
+                    .ToArrayAsync();
 
                 // TODO 期間指定の反映
                 var userNames = joinLeaveHistories.Select(h => h.PlayerName).Distinct().OrderBy(name => name);
-                MatchedUserNames = new ObservableCollection<string>(userNames);
+                MatchedUserNames.Value = new ObservableCollection<string>(userNames);
 
                 // Join/Leave情報から対応するインスタンス情報を取得
                 result = joinLeaveHistories
@@ -185,15 +154,25 @@ namespace VRChatLogWathcer.ViewModels
                 result = dbContext.LocationHistories.AsQueryable();
             }
 
-            // 日付による絞り込み
-            if (FilterByDate && (First is not null || Last is not null))
+            // 対象ワールドによる絞り込み
+            if (FilterByWorldName.Value && !string.IsNullOrEmpty(WorldNameQuery.Value))
             {
-                if (First is not null)
+                result = result.Where(l => l.WorldName.Contains(WorldNameQuery.Value));
+
+                // TODO 期間指定の反映
+                var worldNames = result.Select(l => l.WorldName).Distinct().OrderBy(name => name);
+                MatchedWorldNames.Value = new ObservableCollection<string>(worldNames);
+            }
+
+            // 日付による絞り込み
+            if (FilterByDate.Value && (First.Value is not null || Last.Value is not null))
+            {
+                if (First.Value is not null)
                 {
-                    result = result.Where(h => First <= h.Joined);
+                    result = result.Where(h => First.Value <= h.Joined);
                 }
 
-                var end = Last + TimeSpan.FromDays(1);
+                var end = Last.Value + TimeSpan.FromDays(1);
                 if (end is not null)
                 {
                     if (end < DateTime.Now)
@@ -209,10 +188,10 @@ namespace VRChatLogWathcer.ViewModels
                 result = result.OrderByDescending(h => h.Joined);
             }
 
-            LocationHistories = new ObservableCollection<LocationHistory>(result.ToArray());
-            if (SelectedLocationHistory is not null && LocationHistories.Contains(SelectedLocationHistory))
+            LocationHistories.Value = new ObservableCollection<LocationHistory>(result.ToArray());
+            if (SelectedLocationHistory.Value is not null && LocationHistories.Value.Contains(SelectedLocationHistory.Value))
             {
-                UpdateJoinLeaveHistory(SelectedLocationHistory);
+                UpdateJoinLeaveHistory(SelectedLocationHistory.Value);
             }
         }
         private ViewModelCommand? _applyFilterCommand;
@@ -245,14 +224,28 @@ namespace VRChatLogWathcer.ViewModels
         /// <summary>
         /// ユーザー名の選択を反映します．
         /// </summary>
+        /// <param name="userName">ユーザー名</param>
         public void SelectUserName(string userName)
         {
-            QueriedPerson = userName;
-            FilterByPerson = true;
+            PersonQuery.Value = userName;
+            FilterByPerson.Value = true;
             ApplyFilter();
         }
         private ListenerCommand<string>? _selectUserNameCommand;
         public ListenerCommand<string> SelectUserNameCommand => _selectUserNameCommand ??= new ListenerCommand<string>(SelectUserName);
+
+        /// <summary>
+        /// ワールド名の選択を反映します．
+        /// </summary>
+        /// <param name="worldName">ワールド名</param>
+        public void SelectWorldName(string worldName)
+        {
+            WorldNameQuery.Value = worldName;
+            FilterByWorldName.Value = true;
+            ApplyFilter();
+        }
+        private ListenerCommand<string>? _selectWorldNameCommand;
+        public ListenerCommand<string> SelectWorldNameCommand => _selectWorldNameCommand ??= new ListenerCommand<string>(SelectWorldName);
         #endregion
 
         /// <summary>
@@ -263,7 +256,7 @@ namespace VRChatLogWathcer.ViewModels
         {
             using var dbContext = new LifelogContext();
             var histories = dbContext.JoinLeaveHistories.Where(h => h.LocationHistory == location).OrderBy(h => h.Joined);
-            JoinLeaveHistories = new ObservableCollection<JoinLeaveHistory>(histories);
+            JoinLeaveHistories.Value = new ObservableCollection<JoinLeaveHistory>(histories);
         }
     }
 }

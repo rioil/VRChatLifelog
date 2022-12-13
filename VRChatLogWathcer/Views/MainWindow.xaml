@@ -98,11 +98,11 @@
             </Grid.Resources>
 
             <!--表示期間指定-->
-            <CheckBox Grid.Column="0" IsChecked="{Binding FilterByDate}" ToolTip="日付による絞り込みを有効にする"/>
-            <DatePicker Grid.Column="1" SelectedDate="{Binding First}" ToolTip="検索範囲の開始日付"/>
+            <CheckBox Grid.Column="0" IsChecked="{Binding FilterByDate.Value}" ToolTip="日付による絞り込みを有効にする"/>
+            <DatePicker Grid.Column="1" SelectedDate="{Binding First.Value}" ToolTip="検索範囲の開始日付"/>
             <TextBlock Grid.Column="2" Text="~"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            <DatePicker Grid.Column="3" SelectedDate="{Binding Last}" ToolTip="検索範囲の終了日付"/>
+            <DatePicker Grid.Column="3" SelectedDate="{Binding Last.Value}" ToolTip="検索範囲の終了日付"/>
           </Grid>
 
           <!--検索対象人物-->
@@ -117,11 +117,11 @@
               <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <CheckBox Grid.Column="0" IsChecked="{Binding FilterByPerson}" ToolTip="ユーザーによる絞り込みを有効にする"/>
-            <TextBox Grid.Column="1" Text="{Binding QueriedPerson}" VerticalContentAlignment="Center" ToolTip="ユーザー名"/>
+            <CheckBox Grid.Column="0" IsChecked="{Binding FilterByPerson.Value}" ToolTip="ユーザーによる絞り込みを有効にする"/>
+            <TextBox Grid.Column="1" Text="{Binding PersonQuery.Value}" VerticalContentAlignment="Center" ToolTip="ユーザー名"/>
 
             <!--あいまい検索用絞り込み-->
-            <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding MatchedUserNames}" MaxHeight="100" IsTabStop="False">
+            <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding MatchedUserNames.Value}" MaxHeight="100" IsTabStop="False">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
                   <Button Content="{Binding}" Padding="2" Margin="0 2 3 0" Background="Transparent"
@@ -148,7 +148,6 @@
           </Grid>
 
           <!--ワールド名検索-->
-          <!--TODO-->
           <Grid Grid.Row="2" Margin="0 0 0 5">
             <Grid.RowDefinitions>
               <RowDefinition Height="25"/>
@@ -160,23 +159,23 @@
               <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <CheckBox Grid.Column="0" IsChecked="{Binding FilterByPerson}" ToolTip="ワールドによる絞り込みを有効にする"/>
-            <TextBox Grid.Column="1" Text="{Binding QueriedPerson}" VerticalContentAlignment="Center" ToolTip="ワールド名"/>
+            <CheckBox Grid.Column="0" IsChecked="{Binding FilterByWorldName.Value}" ToolTip="ワールドによる絞り込みを有効にする"/>
+            <TextBox Grid.Column="1" Text="{Binding WorldNameQuery.Value}" VerticalContentAlignment="Center" ToolTip="ワールド名"/>
 
             <!--あいまい検索用絞り込み-->
-            <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding MatchedUserNames}" MaxHeight="100" IsTabStop="False">
+            <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding MatchedWorldNames.Value}" MaxHeight="100" IsTabStop="False">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
                   <Button Content="{Binding}" Padding="2" Margin="0 2 3 0" Background="Transparent"
-                                            Command="{Binding DataContext.SelectUserNameCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                            CommandParameter="{Binding}"/>
+                          Command="{Binding DataContext.SelectWorldNameCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                          CommandParameter="{Binding}"/>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
 
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                   <!--<WrapPanel Orientation="Horizontal"/>-->
-                  <UniformGrid Columns="6"/>
+                  <UniformGrid Columns="3"/>
                 </ItemsPanelTemplate>
               </ItemsControl.ItemsPanel>
 
@@ -204,8 +203,8 @@
 
         <!--場所の履歴情報-->
         <DataGrid Grid.Column="0"
-                          ItemsSource="{Binding LocationHistories}"
-                          SelectedItem="{Binding SelectedLocationHistory}"
+                          ItemsSource="{Binding LocationHistories.Value}"
+                          SelectedItem="{Binding SelectedLocationHistory.Value}"
                           IsReadOnly="True"
                           AutoGenerateColumns="False"
                           SelectionMode="Single">
@@ -241,7 +240,7 @@
         <GridSplitter Grid.Column="1" Width="5" VerticalAlignment="Stretch" HorizontalAlignment="Center"/>
 
         <!--滞在プレイヤー履歴情報-->
-        <DataGrid Grid.Column="2" ItemsSource="{Binding JoinLeaveHistories}" IsReadOnly="True" AutoGenerateColumns="False">
+        <DataGrid Grid.Column="2" ItemsSource="{Binding JoinLeaveHistories.Value}" IsReadOnly="True" AutoGenerateColumns="False">
           <DataGrid.Columns>
             <DataGridTemplateColumn Header="Name">
               <DataGridTemplateColumn.CellTemplate>
@@ -261,8 +260,8 @@
                 <Setter.Value>
                   <ContextMenu>
                     <MenuItem Header="このユーザーで絞り込み"
-                                                  Command="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                                  CommandParameter="{Binding PlayerName}"/>
+                              Command="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                              CommandParameter="{Binding PlayerName}"/>
                   </ContextMenu>
                 </Setter.Value>
               </Setter>
