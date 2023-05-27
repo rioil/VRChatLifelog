@@ -9,6 +9,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using VRChatLogWathcer.Models;
 using VRChatLogWathcer.Views;
 
@@ -34,6 +35,9 @@ namespace VRChatLogWathcer.ViewModels
                     UpdateJoinLeaveHistory(SelectedLocationHistory.Value);
                 }
             }));
+
+            ShowPicturesTakenCommand = new ReactiveCommand(MatchedUserNames.Select(x => x?.Count == 1), false)
+                .WithSubscribe(ShowPicturesTaken);
         }
 
         public void Initialize()
@@ -209,7 +213,27 @@ namespace VRChatLogWathcer.ViewModels
             await SearchMsUtil.ShowImages(dir, location.Joined, location.Left, title);
         }
         private ListenerCommand<LocationHistory>? _showPicturesTakenHereCommand;
-        public ListenerCommand<LocationHistory> ShowPicturesTakenHereCommand => _showPicturesTakenHereCommand ??= new ListenerCommand<LocationHistory>(ShowPicturesTakenHere);
+        public ListenerCommand<LocationHistory> ShowPicturesTakenHereCommand =>
+            _showPicturesTakenHereCommand ??= new ListenerCommand<LocationHistory>(ShowPicturesTakenHere);
+
+        /// <summary>
+        /// 選択された場所で撮影された写真を表示します．
+        /// </summary>
+        /// <param name="location"></param>
+        public async void ShowPicturesTaken()
+        {
+            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "VRChat");
+            // TODO ユーザーがいる間だけに限定できるとより良い
+            if (LocationHistories.Value is null) { return; }
+            using var dbContext = new LifelogContext();
+            var periods = LocationHistories.Value.SelectMany(location =>
+            {
+                return dbContext.JoinLeaveHistories.Where(x => x.LocationHistoryId == location.Id && x.PlayerName == PersonQuery.Value)
+                                                   .Select(x => new SearchMsUtil.Period(x.Joined, x.Left));
+            }).ToArray();
+            await SearchMsUtil.ShowImages(dir, periods, "Pictures");
+        }
+        public ReactiveCommand ShowPicturesTakenCommand { get; }
 
         /// <summary>
         /// 設定画面を表示します．
