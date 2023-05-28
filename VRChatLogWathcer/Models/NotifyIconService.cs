@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using System;
 using System.Linq;
 using System.Diagnostics.CodeAnalysis;
@@ -24,11 +23,6 @@ namespace VRChatLogWathcer.Models
         /// 通知バーアイコン
         /// </summary>
         private WinForm.NotifyIcon? _notifyIcon;
-
-        /// <summary>
-        /// メイン画面
-        /// </summary>
-        //private MainWindow? _mainWindow;
 
         /// <summary>
         /// DIコンテナ
@@ -104,6 +98,9 @@ namespace VRChatLogWathcer.Models
         /// </summary>
         private void ExitApplication()
         {
+            _mainWindowViewModel?.Dispose();
+            _mainWindowViewModel = null;
+
             Application.Current.Shutdown();
         }
 
