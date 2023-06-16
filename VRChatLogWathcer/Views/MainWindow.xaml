@@ -191,7 +191,18 @@
           </Grid>
 
           <!--絞り込み実行ボタン-->
-          <Button Grid.Row="3" Content="絞り込み" Command="{Binding ApplyFilterCommand}" Width="200" HorizontalAlignment="Left"/>
+          <StackPanel Grid.Row="3" Orientation="Horizontal">
+            <StackPanel.Resources>
+              <Style TargetType="Button">
+                <Setter Property="Width" Value="200"/>
+                <Setter Property="Margin" Value="0 0 5 0"/>
+              </Style>
+            </StackPanel.Resources>
+            
+            <Button Content="絞り込み" Command="{Binding ApplyFilterCommand}"/>
+            <Button Content="写真を表示" Command="{Binding ShowPicturesTakenCommand}"
+                    ToolTip="ユーザーが写っている可能性のある写真一覧を表示します．"/>
+          </StackPanel>
         </Grid>
       </GroupBox>
 
