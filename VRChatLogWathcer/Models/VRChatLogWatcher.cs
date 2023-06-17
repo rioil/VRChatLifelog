@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using VRChatLogWathcer.Data;
 using VRChatLogWathcer.Extensions;
 
 namespace VRChatLogWathcer.Models

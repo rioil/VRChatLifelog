@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace VRChatLogWathcer.Models
+namespace VRChatLogWathcer.Data
 {
     public class Instance
     {

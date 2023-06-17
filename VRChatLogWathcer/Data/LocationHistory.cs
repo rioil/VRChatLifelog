@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 
-namespace VRChatLogWathcer.Models
+namespace VRChatLogWathcer.Data
 {
     public class LocationHistory
     {

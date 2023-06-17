@@ -1,9 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.IO;
-using System.Linq;
 
-namespace VRChatLogWathcer.Models
+namespace VRChatLogWathcer.Data
 {
     internal class LifelogContext : DbContext
     {

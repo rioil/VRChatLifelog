@@ -3,7 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using VRChatLogWathcer.Models;
+using VRChatLogWathcer.Data;
 
 #nullable disable
 

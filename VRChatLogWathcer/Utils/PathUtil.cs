@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace VRChatLogWathcer.Models
+namespace VRChatLogWathcer.Utils
 {
     public static class PathUtil
     {

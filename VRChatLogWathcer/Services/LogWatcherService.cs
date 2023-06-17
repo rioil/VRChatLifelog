@@ -10,8 +10,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using VRChatLogWathcer.Extensions;
+using VRChatLogWathcer.Models;
 
-namespace VRChatLogWathcer.Models
+namespace VRChatLogWathcer.Services
 {
     /// <summary>
     /// VRChatのログの監視を行います．

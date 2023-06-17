@@ -9,7 +9,7 @@ using VRChatLogWathcer.ViewModels;
 using VRChatLogWathcer.Views;
 using System.Windows;
 
-namespace VRChatLogWathcer.Models
+namespace VRChatLogWathcer.Services
 {
     public sealed class NotifyIconService : BackgroundService
     {
