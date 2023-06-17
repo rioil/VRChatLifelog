@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using VRChatLogWathcer.Models.SearchMs;
 
-namespace VRChatLogWathcer.Models
+namespace VRChatLogWathcer.Utils
 {
     /// <summary>
     /// search-msプロトコルを扱うためのユーティリティクラス
@@ -123,7 +123,7 @@ namespace VRChatLogWathcer.Models
                     new List<Condition> {
                         new OrCondition(periods.Select(CreateConditionFromPeriod).ToList())
                     }),
-                new SearchMs.Properties());
+                new Models.SearchMs.Properties());
 
             // クエリをXMLにシリアライズしてファイルに書き込み
             using var writer = File.Open(fileName, FileMode.Create, FileAccess.Write);

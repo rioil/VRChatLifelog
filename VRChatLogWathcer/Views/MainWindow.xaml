@@ -7,6 +7,7 @@
     xmlns:v="clr-namespace:VRChatLogWathcer.Views"
     xmlns:vm="clr-namespace:VRChatLogWathcer.ViewModels"
     xmlns:m="clr-namespace:VRChatLogWathcer.Models"
+    xmlns:data="clr-namespace:VRChatLogWathcer.Data"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
@@ -223,7 +224,7 @@
           <DataGrid.Columns>
             <DataGridTemplateColumn Header="World Name">
               <DataGridTemplateColumn.CellTemplate>
-                <DataTemplate DataType="{x:Type m:LocationHistory}">
+                <DataTemplate DataType="{x:Type data:LocationHistory}">
                   <TextBlock Text="{Binding WorldName}" ToolTip="{Binding WorldId}" Margin="5 0"/>
                 </DataTemplate>
               </DataGridTemplateColumn.CellTemplate>
@@ -256,7 +257,7 @@
           <DataGrid.Columns>
             <DataGridTemplateColumn Header="Name">
               <DataGridTemplateColumn.CellTemplate>
-                <DataTemplate DataType="{x:Type m:JoinLeaveHistory}">
+                <DataTemplate DataType="{x:Type data:JoinLeaveHistory}">
                   <TextBlock Text="{Binding PlayerName}" Margin="5 0"/>
                 </DataTemplate>
               </DataGridTemplateColumn.CellTemplate>

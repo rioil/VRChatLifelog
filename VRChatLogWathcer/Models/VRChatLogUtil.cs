@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text.RegularExpressions;
+using VRChatLogWathcer.Data;
 
 namespace VRChatLogWathcer.Models;
 

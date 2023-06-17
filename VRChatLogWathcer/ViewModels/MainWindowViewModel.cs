@@ -10,7 +10,9 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
-using VRChatLogWathcer.Models;
+using VRChatLogWathcer.Data;
+using VRChatLogWathcer.Services;
+using VRChatLogWathcer.Utils;
 using VRChatLogWathcer.Views;
 
 namespace VRChatLogWathcer.ViewModels

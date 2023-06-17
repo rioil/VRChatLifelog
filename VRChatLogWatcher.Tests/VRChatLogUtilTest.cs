@@ -1,3 +1,4 @@
+using VRChatLogWathcer.Data;
 using VRChatLogWathcer.Models;
 
 namespace VRChatLogWatcherTest
