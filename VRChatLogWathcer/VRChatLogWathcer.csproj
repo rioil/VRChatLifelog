@@ -8,6 +8,8 @@
 		<Nullable>enable</Nullable>
 		<EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
 		<ApplicationIcon>Resources\icon.ico</ApplicationIcon>
+		<VersionPrefix>1.1.0</VersionPrefix>
+		<VersionSuffix></VersionSuffix>
 	</PropertyGroup>
 
 	<ItemGroup>
