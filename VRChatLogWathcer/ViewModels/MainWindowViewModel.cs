@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Reactive.Bindings;
 using System;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -38,7 +37,7 @@ namespace VRChatLogWathcer.ViewModels
                 }
             }));
 
-            ShowPicturesTakenCommand = new ReactiveCommand(MatchedUserNames.Select(x => x?.Count == 1), false)
+            ShowPicturesTakenCommand = new ReactiveCommand(MatchedUserNames.Select(x => x?.Length == 1), false)
                 .WithSubscribe(ShowPicturesTaken);
         }
 
@@ -88,7 +87,7 @@ namespace VRChatLogWathcer.ViewModels
         /// <summary>
         /// あいまい検索によって一致したユーザー名
         /// </summary>
-        public ReactivePropertySlim<ObservableCollection<string>?> MatchedUserNames { get; } = new();
+        public ReactivePropertySlim<string[]?> MatchedUserNames { get; } = new();
 
         /// <summary>
         /// ワールド名のクエリ
@@ -103,12 +102,12 @@ namespace VRChatLogWathcer.ViewModels
         /// <summary>
         /// あいまい検索によって一致したワールド名
         /// </summary>
-        public ReactivePropertySlim<ObservableCollection<string>?> MatchedWorldNames { get; } = new();
+        public ReactivePropertySlim<string[]?> MatchedWorldNames { get; } = new();
 
         /// <summary>
         /// 場所の履歴
         /// </summary>
-        public ReactivePropertySlim<ObservableCollection<LocationHistory>?> LocationHistories { get; } = new();
+        public ReactivePropertySlim<LocationHistory[]?> LocationHistories { get; } = new();
 
         /// <summary>
         /// 選択された場所
@@ -118,7 +117,7 @@ namespace VRChatLogWathcer.ViewModels
         /// <summary>
         /// 滞在プレイヤーの履歴
         /// </summary>
-        public ReactivePropertySlim<ObservableCollection<JoinLeaveHistory>?> JoinLeaveHistories { get; } = new();
+        public ReactivePropertySlim<JoinLeaveHistory[]?> JoinLeaveHistories { get; } = new();
 
         /// <summary>
         /// 監視中のファイル数
@@ -133,9 +132,9 @@ namespace VRChatLogWathcer.ViewModels
         public async void ApplyFilter()
         {
             IQueryable<LocationHistory> result;
-            MatchedUserNames.Value?.Clear();
-            MatchedWorldNames.Value?.Clear();
-            JoinLeaveHistories.Value?.Clear();
+            MatchedUserNames.Value = null;
+            MatchedWorldNames.Value = null;
+            JoinLeaveHistories.Value = null;
 
             using var dbContext = new LifelogContext();
             // 対象人物による絞り込み
@@ -149,7 +148,7 @@ namespace VRChatLogWathcer.ViewModels
 
                 // TODO 期間指定の反映
                 var userNames = joinLeaveHistories.Select(h => h.PlayerName).Distinct().OrderBy(name => name);
-                MatchedUserNames.Value = new ObservableCollection<string>(userNames);
+                MatchedUserNames.Value = userNames.ToArray();
 
                 // Join/Leave情報から対応するインスタンス情報を取得
                 result = joinLeaveHistories
@@ -168,7 +167,7 @@ namespace VRChatLogWathcer.ViewModels
 
                 // TODO 期間指定の反映
                 var worldNames = result.Select(l => l.WorldName).Distinct().OrderBy(name => name);
-                MatchedWorldNames.Value = new ObservableCollection<string>(worldNames);
+                MatchedWorldNames.Value = worldNames.ToArray();
             }
 
             // 日付による絞り込み
@@ -195,7 +194,7 @@ namespace VRChatLogWathcer.ViewModels
                 result = result.OrderByDescending(h => h.Joined);
             }
 
-            LocationHistories.Value = new ObservableCollection<LocationHistory>(result.ToArray());
+            LocationHistories.Value = result.ToArray();
             if (SelectedLocationHistory.Value is not null && LocationHistories.Value.Contains(SelectedLocationHistory.Value))
             {
                 UpdateJoinLeaveHistory(SelectedLocationHistory.Value);
@@ -283,7 +282,7 @@ namespace VRChatLogWathcer.ViewModels
         {
             using var dbContext = new LifelogContext();
             var histories = dbContext.JoinLeaveHistories.Where(h => h.LocationHistory == location).OrderBy(h => h.Joined);
-            JoinLeaveHistories.Value = new ObservableCollection<JoinLeaveHistory>(histories);
+            JoinLeaveHistories.Value = histories.ToArray();
         }
     }
 }
