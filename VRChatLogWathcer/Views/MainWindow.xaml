@@ -222,7 +222,8 @@
               </StackPanel>
             </Button>
             <Button Command="{Binding ShowPicturesTakenCommand}"
-                    ToolTip="絞り込み対象ユーザーが写っている可能性のある写真を一覧表示します．">
+                    ToolTip="絞り込み対象ユーザーが写っている可能性のある写真を一覧表示します．"
+                    ToolTipService.ShowOnDisabled="True">
               <StackPanel Orientation="Horizontal">
                 <iconPacks:PackIconCoolicons Kind="UserSquare" Height="12"/>
                 <TextBlock Text="写真を表示"/>
