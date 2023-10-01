@@ -37,8 +37,18 @@ namespace VRChatLogWathcer.ViewModels
                 }
             }));
 
+            SelectedJoinLeaveHistory = new();
+
+            FilterBySelectedUserCommand = new ReactiveCommand(SelectedJoinLeaveHistory.Select(x => x is not null), false)
+                .WithSubscribe(() => SelectUserName(SelectedJoinLeaveHistory.Value!.PlayerName));
+            FilterBySelectedWorldCommand = new ReactiveCommand(SelectedLocationHistory.Select(x => x is not null), false)
+                .WithSubscribe(() => SelectWorldName(SelectedLocationHistory.Value!.WorldName));
+
             ShowPicturesTakenCommand = new ReactiveCommand(MatchedUserNames.Select(x => x?.Length == 1), false)
                 .WithSubscribe(ShowPicturesTaken);
+
+            ShowPicturesTakenInSelectedLocationCommand = new ReactiveCommand(SelectedLocationHistory.Select(x => x is not null), false)
+                .WithSubscribe(() => ShowPicturesTakenHere(SelectedLocationHistory.Value!));
         }
 
         public void Initialize()
@@ -113,6 +123,11 @@ namespace VRChatLogWathcer.ViewModels
         /// 選択された場所
         /// </summary>
         public ReactivePropertySlim<LocationHistory?> SelectedLocationHistory { get; }
+
+        /// <summary>
+        /// 選択されたプレイヤー
+        /// </summary>
+        public ReactivePropertySlim<JoinLeaveHistory?> SelectedJoinLeaveHistory { get; }
 
         /// <summary>
         /// 滞在プレイヤーの履歴
@@ -216,11 +231,11 @@ namespace VRChatLogWathcer.ViewModels
         private ListenerCommand<LocationHistory>? _showPicturesTakenHereCommand;
         public ListenerCommand<LocationHistory> ShowPicturesTakenHereCommand =>
             _showPicturesTakenHereCommand ??= new ListenerCommand<LocationHistory>(ShowPicturesTakenHere);
+        public ReactiveCommand ShowPicturesTakenInSelectedLocationCommand { get; }
 
         /// <summary>
         /// 選択された場所で撮影された写真を表示します．
         /// </summary>
-        /// <param name="location"></param>
         public async void ShowPicturesTaken()
         {
             var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "VRChat");
@@ -257,8 +272,9 @@ namespace VRChatLogWathcer.ViewModels
             FilterByPerson.Value = true;
             ApplyFilter();
         }
-        private ListenerCommand<string>? _selectUserNameCommand;
-        public ListenerCommand<string> SelectUserNameCommand => _selectUserNameCommand ??= new ListenerCommand<string>(SelectUserName);
+        private ListenerCommand<string>? _selectUserNameCandidateCommand;
+        public ListenerCommand<string> SelectUserNameCandidateCommand => _selectUserNameCandidateCommand ??= new ListenerCommand<string>(SelectUserName);
+        public ReactiveCommand FilterBySelectedUserCommand { get; }
 
         /// <summary>
         /// ワールド名の選択を反映します．
@@ -270,8 +286,9 @@ namespace VRChatLogWathcer.ViewModels
             FilterByWorldName.Value = true;
             ApplyFilter();
         }
-        private ListenerCommand<string>? _selectWorldNameCommand;
-        public ListenerCommand<string> SelectWorldNameCommand => _selectWorldNameCommand ??= new ListenerCommand<string>(SelectWorldName);
+        private ListenerCommand<string>? _selectWorldNameCandidateCommand;
+        public ListenerCommand<string> SelectWorldNameCandidateCommand => _selectWorldNameCandidateCommand ??= new ListenerCommand<string>(SelectWorldName);
+        public ReactiveCommand FilterBySelectedWorldCommand { get; }
         #endregion
 
         /// <summary>

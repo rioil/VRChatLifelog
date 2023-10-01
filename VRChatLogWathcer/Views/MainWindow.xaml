@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:PresentationOptions="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options" 
     xmlns:l="http://schemas.livet-mvvm.net/2011/wpf"
     xmlns:v="clr-namespace:VRChatLogWathcer.Views"
     xmlns:vm="clr-namespace:VRChatLogWathcer.ViewModels"
@@ -54,7 +55,7 @@
         <Setter Property="Background" Value="Transparent"/>
       </Style>
     </Grid.Resources>
-    
+
     <Grid.RowDefinitions>
       <RowDefinition Height="25"/>
       <RowDefinition Height="*"/>
@@ -72,6 +73,7 @@
 
     <Grid Grid.Row="1">
       <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
         <RowDefinition Height="Auto"/>
         <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
@@ -140,7 +142,7 @@
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
                   <Button Content="{Binding}" Padding="2" Margin="0 2 3 0" Background="Transparent"
-                          Command="{Binding DataContext.SelectUserNameCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                          Command="{Binding DataContext.SelectUserNameCandidateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                           CommandParameter="{Binding}"/>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
@@ -184,7 +186,7 @@
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
                   <Button Content="{Binding}" Padding="2" Margin="0 2 3 0" Background="Transparent"
-                          Command="{Binding DataContext.SelectWorldNameCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                          Command="{Binding DataContext.SelectWorldNameCandidateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                           CommandParameter="{Binding}"/>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
@@ -233,12 +235,53 @@
         </Grid>
       </GroupBox>
 
-      <Grid Grid.Row="1" Margin="5 0 5 5">
-        <Grid.RowDefinitions>
-          <RowDefinition Height="Auto"/>
-          <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-        
+      <Grid Grid.Row="1" Margin="8 0 0 5">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <Button Grid.Column="0"
+                Command="{Binding ShowPicturesTakenInSelectedLocationCommand}"
+                ToolTip="選択した場所で撮影した写真を一覧表示します．"
+                ToolTipService.ShowOnDisabled="True"
+                Height="25" Width="220"
+                Margin="0 0 5 0">
+          <StackPanel Orientation="Horizontal">
+            <iconPacks:PackIconCoolicons Kind="Image" Height="12"/>
+            <TextBlock Text="選択した場所で撮影した写真を表示"/>
+          </StackPanel>
+        </Button>
+
+        <Button Grid.Column="1"
+                Command="{Binding FilterBySelectedWorldCommand}"
+                CommandParameter="{Binding SelectedLocationHistory.Value.WorldName}"
+                ToolTip="選択したワールドで絞り込みます．"
+                ToolTipService.ShowOnDisabled="True"
+                Height="25" Width="220"
+                Margin="0 0 5 0">
+          <StackPanel Orientation="Horizontal">
+            <iconPacks:PackIconCoolicons Kind="LocationOutline" Height="12"/>
+            <TextBlock Text="選択したワールドで絞り込み"/>
+          </StackPanel>
+        </Button>
+
+        <Button Grid.Column="2"
+                Command="{Binding FilterBySelectedUserCommand}"
+                CommandParameter="{Binding SelectedJoinLeaveHistory.Value.PlayerName}"
+                ToolTip="選択したユーザーで絞り込みます．"
+                ToolTipService.ShowOnDisabled="True"
+                Height="25" Width="220"
+                Margin="0 0 5 0">
+          <StackPanel Orientation="Horizontal">
+            <iconPacks:PackIconCoolicons Kind="User" Height="12"/>
+            <TextBlock Text="選択したユーザーで絞り込み"/>
+          </StackPanel>
+        </Button>
+      </Grid>
+
+      <Grid Grid.Row="2" Margin="5 0 5 5">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*"/>
           <ColumnDefinition Width="Auto"/>
@@ -246,19 +289,7 @@
         </Grid.ColumnDefinitions>
 
         <!--場所の履歴情報-->
-        <Button Grid.Column="0"
-                Command="{Binding ShowPicturesTakenHereCommand}"
-                CommandParameter="{Binding SelectedLocationHistory.Value}"
-                ToolTip="選択した場所で撮影した写真を一覧表示します．"
-                Height="25" Width="220" HorizontalAlignment="Left"
-                Margin="0 0 0 5">
-          <StackPanel Orientation="Horizontal">
-            <iconPacks:PackIconCoolicons Kind="Image" Height="12"/>
-            <TextBlock Text="選択した場所で撮影した写真を表示"/>
-          </StackPanel>
-        </Button>
-
-        <DataGrid Grid.Row="1" Grid.Column="0"
+        <DataGrid Grid.Column="0"
                   ItemsSource="{Binding LocationHistories.Value}"
                   SelectedItem="{Binding SelectedLocationHistory.Value}"
                   IsReadOnly="True"
@@ -268,7 +299,15 @@
             <DataGridTemplateColumn Header="World Name">
               <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate DataType="{x:Type data:LocationHistory}">
-                  <TextBlock Text="{Binding WorldName}" ToolTip="{Binding WorldId}" Margin="5 0"/>
+                  <TextBlock Text="{Binding WorldName}" Margin="5 0">
+                    <TextBlock.ToolTip>
+                      <TextBlock>
+                        <Run Text="{Binding WorldName}"/>
+                        <LineBreak/>
+                        <Run Text="{Binding WorldId}"/>
+                      </TextBlock>
+                    </TextBlock.ToolTip>
+                  </TextBlock>
                 </DataTemplate>
               </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>
@@ -279,13 +318,36 @@
           <DataGrid.RowStyle>
             <Style TargetType="DataGridRow">
               <Setter Property="Tag"
-                      Value="{Binding DataContext.ShowPicturesTakenHereCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                      Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"/>
               <Setter Property="ContextMenu">
                 <Setter.Value>
                   <ContextMenu>
                     <MenuItem Header="ここで撮影した写真を表示"
-                              Command="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                              CommandParameter="{Binding}"/>
+                              Command="{Binding PlacementTarget.Tag.ShowPicturesTakenHereCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                              CommandParameter="{Binding}">
+                      <MenuItem.Icon>
+                        <Image Source="{iconPacks:CooliconsImage Kind=Image}"/>
+                      </MenuItem.Icon>
+                    </MenuItem>
+
+                    <MenuItem Header="このワールドで絞り込み"
+                              Command="{Binding PlacementTarget.Tag.SelectWorldNameCandidateCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                              CommandParameter="{Binding WorldName}">
+                      <MenuItem.Icon>
+                        <Image>
+                          <Image.Source>
+                            <DrawingImage PresentationOptions:Freeze="True">
+                              <DrawingImage.Drawing>
+                                <DrawingGroup>
+                                  <ImageDrawing ImageSource="{iconPacks:CooliconsImage Kind=FilterOutline}" Rect="0 0 12 12"/>
+                                  <ImageDrawing ImageSource="{iconPacks:CooliconsImage Kind=LocationOutline}" Rect="9 7 7 9"/>
+                                </DrawingGroup>
+                              </DrawingImage.Drawing>
+                            </DrawingImage>
+                          </Image.Source>
+                        </Image>
+                      </MenuItem.Icon>
+                    </MenuItem>
                   </ContextMenu>
                 </Setter.Value>
               </Setter>
@@ -295,11 +357,13 @@
 
         <GridSplitter Grid.RowSpan="2" Grid.Column="1" Width="5" VerticalAlignment="Stretch" HorizontalAlignment="Center" Margin="3 0"/>
 
-        <!--滞在プレイヤー履歴情報-->        
+        <!--滞在プレイヤー履歴情報-->
         <DataGrid Grid.Row="1" Grid.Column="2"
                   ItemsSource="{Binding JoinLeaveHistories.Value}"
+                  SelectedItem="{Binding SelectedJoinLeaveHistory.Value}"
                   IsReadOnly="True"
-                  AutoGenerateColumns="False">
+                  AutoGenerateColumns="False"
+                  SelectionMode="Single">
           <DataGrid.Columns>
             <DataGridTemplateColumn Header="Name">
               <DataGridTemplateColumn.CellTemplate>
@@ -314,13 +378,28 @@
           <DataGrid.RowStyle>
             <Style TargetType="DataGridRow">
               <Setter Property="Tag"
-                      Value="{Binding DataContext.SelectUserNameCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                      Value="{Binding DataContext.SelectUserNameCandidateCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
               <Setter Property="ContextMenu">
                 <Setter.Value>
                   <ContextMenu>
                     <MenuItem Header="このユーザーで絞り込み"
                               Command="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                              CommandParameter="{Binding PlayerName}"/>
+                              CommandParameter="{Binding PlayerName}">
+                      <MenuItem.Icon>
+                        <Image>
+                          <Image.Source>
+                            <DrawingImage PresentationOptions:Freeze="True">
+                              <DrawingImage.Drawing>
+                                <DrawingGroup>
+                                  <ImageDrawing ImageSource="{iconPacks:CooliconsImage Kind=FilterOutline}" Rect="0 0 12 12"/>
+                                  <ImageDrawing ImageSource="{iconPacks:CooliconsImage Kind=User}" Rect="8 7 8 9"/>
+                                </DrawingGroup>
+                              </DrawingImage.Drawing>
+                            </DrawingImage>
+                          </Image.Source>
+                        </Image>
+                      </MenuItem.Icon>
+                    </MenuItem>
                   </ContextMenu>
                 </Setter.Value>
               </Setter>
@@ -330,7 +409,8 @@
       </Grid>
     </Grid>
 
-    <StatusBar Grid.Row="2">
+    <!--ステータスバー-->
+    <StatusBar Grid.Row="3">
       <StatusBarItem DockPanel.Dock="Right">
         <TextBlock>
           <TextBlock.Style>
