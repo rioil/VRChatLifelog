@@ -84,6 +84,27 @@ namespace VRChatLogWatcherTest
             EInstanceType.FriendsPlus,
             ERegion.USW,
             "feDc31J9Az")]
+        [InlineData(
+            "[Behaviour] Joining wrld_4432ea9b-729c-46e3-8eaf-846aa0a37fdd:3456~group(grp_1ef362ad-f525-4ab8-900b-0071e6b9610a)~groupAccessType(members)~region(jp)",
+            "wrld_4432ea9b-729c-46e3-8eaf-846aa0a37fdd",
+            "3456",
+            EInstanceType.Group,
+            ERegion.JP,
+            "grp_1ef362ad-f525-4ab8-900b-0071e6b9610a")]
+        [InlineData(
+            "[Behaviour] Joining wrld_4432ea9b-729c-46e3-8eaf-846aa0a37fdd:9072~group(grp_1ef362ad-f525-4ab8-900b-0071e6b9610a)~groupAccessType(plus)~region(jp)",
+            "wrld_4432ea9b-729c-46e3-8eaf-846aa0a37fdd",
+            "9072",
+            EInstanceType.GroupPlus,
+            ERegion.JP,
+            "grp_1ef362ad-f525-4ab8-900b-0071e6b9610a")]
+        [InlineData(
+            "[Behaviour] Joining wrld_4432ea9b-729c-46e3-8eaf-846aa0a37fdd:9072~group(grp_1ef362ad-f525-4ab8-900b-0071e6b9610a)~groupAccessType(public)~region(jp)",
+            "wrld_4432ea9b-729c-46e3-8eaf-846aa0a37fdd",
+            "9072",
+            EInstanceType.GroupPublic,
+            ERegion.JP,
+            "grp_1ef362ad-f525-4ab8-900b-0071e6b9610a")]
         public void Parse_Valid_WorldJoinLog(string log, string worldId, string instanceId, EInstanceType type, ERegion region, string masterId)
         {
             var isSuccess = VRChatLogUtil.TryParseWorldJoinLog(log, out var instance);

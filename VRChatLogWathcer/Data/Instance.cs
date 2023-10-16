@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace VRChatLogWathcer.Data
+﻿namespace VRChatLogWathcer.Data
 {
     public class Instance
     {
@@ -21,23 +19,34 @@ namespace VRChatLogWathcer.Data
         public string? MasterId { get; set; }
     }
 
+    /// <summary>
+    /// インスタンスタイプ
+    /// </summary>
+    /// <remarks>DBに保存されるため，明示的に値を指定します．</remarks>
     public enum EInstanceType
     {
-        Public,
-        FriendsPlus,
-        Friends,
-        InvitePlus,
-        Invite,
-        Group,
-        Unknown,
+        Public = 0,
+        FriendsPlus = 1,
+        Friends = 2,
+        InvitePlus = 3,
+        Invite = 4,
+        Group = 5,
+        GroupPlus = 7,
+        GroupPublic = 8,
+
+        Unknown = 6,
     }
 
+    /// <summary>
+    /// サーバーの地域
+    /// </summary>
+    /// <remarks>DBに保存されるため，明示的に値を指定します．</remarks>
     public enum ERegion
     {
-        USW,
-        USE,
-        EU,
-        JP,
-        Unknown,
+        USW = 0,
+        USE = 1,
+        EU = 2,
+        JP = 3,
+        Unknown = 4,
     }
 }

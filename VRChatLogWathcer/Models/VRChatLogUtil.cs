@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Net;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using VRChatLogWathcer.Data;
 
@@ -12,7 +10,14 @@ public static class VRChatLogUtil
 
     private static readonly Regex PlayerLeftLogPattern = new(@"\[Behaviour\] Unregistering (?<player>.*)");
 
-    private static readonly Regex WorldJoinLogPattern = new(@"\[Behaviour\] Joining (?<worldId>wr?ld_[\da-fA-F]{8}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{12}):(?<instanceId>\w+)(~(?<type>[\w]+)\((?<master>((usr|grp)_[\da-fA-F]{8}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{12})|\w{10})\))?(?<canReqInvite>\~canRequestInvite)?(~region\((?<region>[\w]+)\))?(~nonce\((.+)\))?");
+    //lang=regex
+    private static readonly Regex WorldJoinLogPattern = new(
+        @"\[Behaviour\] Joining (?<worldId>wr?ld_[\da-fA-F]{8}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{12}):(?<instanceId>\w+)" +
+        @"(~(?<type>[\w]+)\((?<master>((usr|grp)_[\da-fA-F]{8}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{12})|\w{10})\))?" +
+        @"(?<canReqInvite>~canRequestInvite)?" +
+        @"(~groupAccessType\((?<groupAccessType>[\w]+)\))?" +
+        @"(~region\((?<region>[\w]+)\))?" +
+        @"(~nonce\((.+)\))?");
     private static readonly Regex LocalTestWorldJoinLogPattern = new(@"\[Behaviour\] Joining local:(?<worldId>[a-f\d]+)");
 
     private static readonly Regex RoomJoinLogPattern = new(@"\[Behaviour\] Joining or Creating Room: (?<name>.*)");
@@ -87,12 +92,19 @@ public static class VRChatLogUtil
 
         var instanceType = match.Groups["type"].Value;
         var canReqInvite = !string.IsNullOrEmpty(match.Groups["canReqInvite"].Value);
+        var groupAccessType = match.Groups["groupAccessType"].Value;
         var eInstanceType = instanceType switch
         {
             "hidden" => EInstanceType.FriendsPlus,
             "friends" => EInstanceType.Friends,
             "private" => canReqInvite ? EInstanceType.InvitePlus : EInstanceType.Invite,
-            "group" => EInstanceType.Group,
+            "group" => groupAccessType switch
+            {
+                "members" => EInstanceType.Group,
+                "plus" => EInstanceType.GroupPlus,
+                "public" => EInstanceType.GroupPublic,
+                _ => EInstanceType.Unknown
+            },
             "" => EInstanceType.Public,
             _ => EInstanceType.Unknown,
         };
