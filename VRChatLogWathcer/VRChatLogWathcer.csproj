@@ -8,16 +8,10 @@
 		<Nullable>enable</Nullable>
 		<EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
 		<ApplicationIcon>Resources\icon.ico</ApplicationIcon>
-		<VersionPrefix>1.1.1</VersionPrefix>
+		<VersionPrefix>1.1.2</VersionPrefix>
 		<VersionSuffix></VersionSuffix>
 	</PropertyGroup>
 
-	<ItemGroup>
-	  <None Remove="Resources\green.ico" />
-	  <None Remove="Resources\icon.ico" />
-	  <None Remove="Resources\taskbar.ico" />
-	  <None Remove="Views\SettingWindow.xaml" />
-	</ItemGroup>
 
 	<ItemGroup>
 	  <Resource Include="Resources\icon.ico" />
