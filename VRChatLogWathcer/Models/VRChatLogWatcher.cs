@@ -208,29 +208,8 @@ namespace VRChatLogWathcer.Models
             // プレイヤーjoinログ
             if (VRChatLogUtil.TryParsePlayerJoinLog(item.Content, out var joinLog))
             {
-                if (joinLog.IsLocal)
-                {
-                    // 既に項目が存在すれば追加しない TODO:処理済みのファイルを記録するなどして，もう少し良い方法を取りたい
-                    var locationHistory = dbContext.LocationHistories.Where(h => h.WorldId == _currentInstance.WorldId && h.Joined == item.Time).FirstOrDefault();
-                    if (locationHistory is null)
-                    {
-                        var logFileInfo = dbContext.LogFiles.First(x => x.Id == _logFileInfoId);
-                        _currentLocation = new LocationHistory(_currentInstance, item.Time, logFileInfo);
-                        dbContext.LocationHistories.Add(_currentLocation);
-                        dbContext.SaveChanges();
-                    }
-                    else
-                    {
-                        _currentLocation = locationHistory;
-                    }
-                }
-                else
-                {
-                    _currentLocation = dbContext.LocationHistories.First(x => x.Id == _currentLocation.Id);
-                }
-
-                // 既に項目が存在すれば追加しない TODO:処理済みのファイルを記録するなどして，もう少し良い方法を取りたい
-                if (!dbContext.JoinLeaveHistories.Where(h => h.LocationHistory.Id == _currentLocation.Id && h.PlayerName == joinLog.PlayerName && h.Joined == item.Time).Any())
+                var joinLeaveHistory = dbContext.JoinLeaveHistories.Where(h => h.LocationHistory.Id == _currentLocation.Id && h.PlayerName == joinLog.PlayerName && h.Joined == item.Time);
+                if (!joinLeaveHistory.Any())
                 {
                     dbContext.JoinLeaveHistories.Add(new JoinLeaveHistory(joinLog.PlayerName, item.Time, joinLog.IsLocal, _currentLocation));
                     dbContext.SaveChanges();
@@ -267,6 +246,20 @@ namespace VRChatLogWathcer.Models
             else if (VRChatLogUtil.TryParseRoomJoinLog(item.Content, out var roomJoinLog))
             {
                 _currentInstance.WorldName = roomJoinLog.WorldName;
+
+                // ワールドjoinログ -> ルームjoinログの順に出力されるため，ルームjoinログを読み込んだ時点で新しいロケーションを作成
+                var locationHistory = dbContext.LocationHistories.Where(h => h.WorldId == _currentInstance.WorldId && h.Joined == item.Time).FirstOrDefault();
+                if (locationHistory is null)
+                {
+                    var logFileInfo = dbContext.LogFiles.First(x => x.Id == _logFileInfoId);
+                    _currentLocation = new LocationHistory(_currentInstance, item.Time, logFileInfo);
+                    dbContext.LocationHistories.Add(_currentLocation);
+                    dbContext.SaveChanges();
+                }
+                else
+                {
+                    _currentLocation = locationHistory;
+                }
             }
         }
 
