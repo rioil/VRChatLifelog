@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using VRChatLogWathcer.Data;
 
@@ -25,12 +26,12 @@ public static class VRChatLogUtil
     /// <summary>
     /// プレイヤーJoinログを解析します．
     /// </summary>
-    /// <param name="log">ログ文字列</param>
+    /// <param name="log">ログ</param>
     /// <param name="joinLog">解析したプレイヤーJoinログ</param>
     /// <returns>解析に成功すればtrue，解析に失敗すればfalse</returns>
-    public static bool TryParsePlayerJoinLog(string log, [NotNullWhen(true)] out PlayerJoinLog? joinLog)
+    public static bool TryParsePlayerJoinLog(LogItem log, [NotNullWhen(true)] out PlayerJoinLog? joinLog)
     {
-        var match = PlayerJoinLogPattern.Match(log);
+        var match = PlayerJoinLogPattern.Match(log.Content);
         if (!match.Success)
         {
             joinLog = null;
@@ -40,19 +41,19 @@ public static class VRChatLogUtil
         var playerName = match.Groups["player"].Value;
         var isLocal = match.Groups["type"].Value == "local";
 
-        joinLog = new PlayerJoinLog(playerName, isLocal);
+        joinLog = new PlayerJoinLog(log.Time, playerName, isLocal);
         return true;
     }
 
     /// <summary>
     /// プレイヤーLeftログを解析します．
     /// </summary>
-    /// <param name="log">ログ文字列</param>
+    /// <param name="log">ログ</param>
     /// <param name="leftLog">解析したプレイヤーLeftログ</param>
     /// <returns>解析に成功すればtrue，解析に失敗すればfalse</returns>
-    public static bool TryParsePlayerLeftLog(string log, [NotNullWhen(true)] out PlayerLeftLog? leftLog)
+    public static bool TryParsePlayerLeftLog(LogItem log, [NotNullWhen(true)] out PlayerLeftLog? leftLog)
     {
-        var match = PlayerLeftLogPattern.Match(log);
+        var match = PlayerLeftLogPattern.Match(log.Content);
         if (!match.Success)
         {
             leftLog = null;
@@ -61,7 +62,7 @@ public static class VRChatLogUtil
 
         var playerName = match.Groups["player"].Value;
 
-        leftLog = new PlayerLeftLog(playerName);
+        leftLog = new PlayerLeftLog(log.Time, playerName);
         return true;
     }
 
@@ -148,15 +149,17 @@ public static class VRChatLogUtil
 /// <summary>
 /// プレイヤーJoinログ
 /// </summary>
+/// <param name="Time">時刻</param>
 /// <param name="PlayerName">プレイヤー名</param>
 /// <param name="IsLocal">ローカルプレイヤーであればtrue，リモートプレイヤーであればfalse</param>
-public record PlayerJoinLog(string PlayerName, bool IsLocal);
+public record PlayerJoinLog(DateTime Time, string PlayerName, bool IsLocal);
 
 /// <summary>
 /// プレイヤーLeftログ
 /// </summary>
+/// <param name="Time">時刻</param>
 /// <param name="PlayerName">プレイヤー名</param>
-public record PlayerLeftLog(string PlayerName);
+public record PlayerLeftLog(DateTime Time, string PlayerName);
 
 /// <summary>
 /// ルームJoinログ

@@ -206,20 +206,20 @@ namespace VRChatLogWathcer.Models
             using var dbContext = new LifelogContext();
 
             // プレイヤーjoinログ
-            if (VRChatLogUtil.TryParsePlayerJoinLog(item.Content, out var joinLog))
+            if (VRChatLogUtil.TryParsePlayerJoinLog(item, out var joinLog))
             {
-                var joinLeaveHistory = dbContext.JoinLeaveHistories.Where(h => h.LocationHistory.Id == _currentLocation.Id && h.PlayerName == joinLog.PlayerName && h.Joined == item.Time);
+                var joinLeaveHistory = dbContext.JoinLeaveHistories.Where(h => IsSameJoinLeaveHistory(h, joinLog));
                 if (!joinLeaveHistory.Any())
                 {
-                    dbContext.JoinLeaveHistories.Add(new JoinLeaveHistory(joinLog.PlayerName, item.Time, joinLog.IsLocal, _currentLocation));
+                    dbContext.JoinLeaveHistories.Add(new JoinLeaveHistory(joinLog, _currentLocation));
                     dbContext.SaveChanges();
                 }
             }
             // プレイヤーleaveログ
-            else if (VRChatLogUtil.TryParsePlayerLeftLog(item.Content, out var leftLog))
+            else if (VRChatLogUtil.TryParsePlayerLeftLog(item, out var leftLog))
             {
                 // MEMO:ローカルテスト時は同名のプレイヤーが複数人存在することになるためSingleOrDefaultではなく，FirstOrDefaultを用いる
-                var history = dbContext.JoinLeaveHistories.FirstOrDefault(h => h.LocationHistoryId == _currentLocation.Id && h.PlayerName == leftLog.PlayerName && h.Joined <= item.Time && h.Left == null);
+                var history = dbContext.JoinLeaveHistories.FirstOrDefault(h => IsSameJoinLeaveHistory(h, leftLog));
                 if (history is null) { return; }   // TODO 見つからないのは正常ではないのでログ出力等の対応が必要
 
                 history.Left = item.Time;
@@ -227,11 +227,11 @@ namespace VRChatLogWathcer.Models
 
                 if (history.IsLocal)
                 {
-                    var locHistory = dbContext.LocationHistories.SingleOrDefault(h => h.LogFileInfoId == _logFileInfoId && h.Joined <= item.Time && h.Left == null);
-                    if (locHistory is not null)
+                    var locationHistory = dbContext.LocationHistories.SingleOrDefault(h => IsCorrespondingHistory(h, item));
+                    if (locationHistory is not null)
                     {
-                        locHistory.Left = item.Time;
-                        dbContext.LocationHistories.Update(locHistory);
+                        locationHistory.Left = item.Time;
+                        dbContext.LocationHistories.Update(locationHistory);
                     }
                 }
 
@@ -248,7 +248,7 @@ namespace VRChatLogWathcer.Models
                 _currentInstance.WorldName = roomJoinLog.WorldName;
 
                 // ワールドjoinログ -> ルームjoinログの順に出力されるため，ルームjoinログを読み込んだ時点で新しいロケーションを作成
-                var locationHistory = dbContext.LocationHistories.Where(h => h.WorldId == _currentInstance.WorldId && h.Joined == item.Time).FirstOrDefault();
+                var locationHistory = dbContext.LocationHistories.Where(h => IsSameLocation(h, item)).FirstOrDefault();
                 if (locationHistory is null)
                 {
                     var logFileInfo = dbContext.LogFiles.First(x => x.Id == _logFileInfoId);
@@ -261,6 +261,40 @@ namespace VRChatLogWathcer.Models
                     _currentLocation = locationHistory;
                 }
             }
+        }
+
+        /*
+         * TODO
+         * こういう感じのメソッドをDBContextのメソッドとして追加する or 拡張メソッドを定義する or ヘルパークラスを作成する
+         * とかしたほうが良いかもしれない
+         */
+        // ここをメソッド化するべきじゃなかった気がする
+        // DBContextへのクエリ自体をメソッド化するべき
+        private bool IsSameLocation(LocationHistory history, LogItem logItem)
+        {
+            return history.WorldId == _currentInstance.WorldId && history.Joined == logItem.Time;
+        }
+
+        private bool IsSameJoinLeaveHistory(JoinLeaveHistory history, PlayerJoinLog joinLog)
+        {
+            return history.LocationHistory.Id == _currentLocation.Id
+                && history.PlayerName == joinLog.PlayerName
+                && history.Joined == joinLog.Time;
+        }
+
+        private bool IsSameJoinLeaveHistory(JoinLeaveHistory history, PlayerLeftLog leftLog)
+        {
+            return history.LocationHistoryId == _currentLocation.Id
+                && history.PlayerName == leftLog.PlayerName
+                && history.Joined <= leftLog.Time
+                && history.Left == null;
+        }
+
+        private bool IsCorrespondingHistory(LocationHistory history, LogItem item)
+        {
+            return history.LogFileInfoId == _logFileInfoId
+                && history.Joined <= item.Time
+                && history.Left == null;
         }
 
         // ブルースクリーン等で異常終了した場合のための自動修復処理

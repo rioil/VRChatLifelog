@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace VRChatLogWathcer.Data
 {
-    internal class LogItem
+    public class LogItem
     {
         public LogItem(DateTime time, ELogLevel logLevel, string content)
         {
@@ -57,7 +57,7 @@ namespace VRChatLogWathcer.Data
         }
     }
 
-    internal enum ELogLevel
+    public enum ELogLevel
     {
         Log,
         Warning,

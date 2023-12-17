@@ -1,11 +1,12 @@
 ﻿using System;
+using VRChatLogWathcer.Models;
 
 namespace VRChatLogWathcer.Data
 {
     public class JoinLeaveHistory
     {
-        public JoinLeaveHistory(string playerName, DateTime joined, bool isLocal, LocationHistory location)
-            : this(playerName, joined, isLocal, location.Id)
+        public JoinLeaveHistory(PlayerJoinLog joinLog, LocationHistory location)
+            : this(joinLog.PlayerName, joinLog.Time, joinLog.IsLocal, location.Id)
         {
         }
 
