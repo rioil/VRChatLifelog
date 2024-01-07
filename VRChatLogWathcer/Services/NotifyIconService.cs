@@ -80,7 +80,7 @@ namespace VRChatLogWathcer.Services
             {
                 Visible = true,
                 Icon = new System.Drawing.Icon(icon),
-                Text = "VRChat Log Watcher",
+                Text = "VRChat Lifelog",
                 ContextMenuStrip = menu,
             };
 
