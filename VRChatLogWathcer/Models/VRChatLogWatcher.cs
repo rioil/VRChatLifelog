@@ -58,12 +58,26 @@ namespace VRChatLogWathcer.Models
         /// </summary>
         public string WatchingFileFullPath { get; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="watchingFileFullPath"></param>
+        /// <param name="logger"></param>
+        /// <exception cref="FileNotFoundException"></exception>
         public VRChatLogWatcher(string watchingFileFullPath, ILogger<VRChatLogWatcher> logger)
         {
             _logger = logger;
 
             WatchingFileFullPath = watchingFileFullPath;
+
+            // GetCreationTimeはファイルが存在しない場合も例外を発生させずに値を返すため
+            // 作成日時取得後にファイルの存在確認を行う
             var created = File.GetCreationTime(watchingFileFullPath);
+            if (!File.Exists(watchingFileFullPath))
+            {
+                throw new FileNotFoundException(null, watchingFileFullPath);
+            }
+
             using var dbContext = new LifelogContext();
             var fileInfo = dbContext.LogFiles.FirstOrDefault(x => x.Created == created);
             if (fileInfo is null)
@@ -110,7 +124,45 @@ namespace VRChatLogWathcer.Models
         /// <remarks>キャンセル要求が行われても，ファイルの末尾に到達するまで解析処理を続行します．</remarks>
         private async Task RunWatchTask(CancellationToken cancellationToken)
         {
-            using var reader = await OpenLogFileAsync(WatchingFileFullPath, cancellationToken: cancellationToken).ConfigureAwait(false);
+            try
+            {
+                using var reader = await OpenLogFileAsync(WatchingFileFullPath, cancellationToken: cancellationToken).ConfigureAwait(false);
+                await ReadAsync(reader, cancellationToken).ConfigureAwait(false);
+            }
+            catch (FileNotFoundException ex)
+            {
+                _logger.LogWarning("Log file not found : {filePath}", ex.FileName);
+            }
+        }
+
+        /// <summary>
+        /// VRChatのログファイルを開きます．
+        /// </summary>
+        /// <param name="path">ログファイルのパス</param>
+        /// <param name="maxRetry">リトライ回数</param>
+        /// <param name="retryIntervalMs">リトライ間隔(ms)</param>
+        /// <returns>ログファイルの<see cref="StreamReader"/></returns>
+        private static async Task<StreamReader> OpenLogFileAsync(string path, int maxRetry = 5, int retryIntervalMs = 500, CancellationToken cancellationToken = default)
+        {
+            int retryCount = 0;
+            while (true)
+            {
+                try
+                {
+                    return new StreamReader(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete));
+                }
+                catch (FileNotFoundException)
+                {
+                    if (retryCount >= maxRetry) { throw; }
+                    retryCount++;
+                }
+
+                await Task.Delay(retryIntervalMs, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        private async Task ReadAsync(StreamReader reader, CancellationToken cancellationToken)
+        {
             var buffer = new List<string>();
 
             DateTime? lastRead = null;
@@ -168,32 +220,6 @@ namespace VRChatLogWathcer.Models
                 var fileInfoId = dbContext.LogFiles.Single(x => x.Id == _logFileInfoId);
                 fileInfoId.LastRead = lastRead;
                 await dbContext.SaveChangesAsync(CancellationToken.None).ConfigureAwait(false);     // MEMO:最終読み取り時刻の保存はキャンセルしないのでキャンセルトークンは伝播させない
-            }
-        }
-
-        /// <summary>
-        /// VRChatのログファイルを開きます．
-        /// </summary>
-        /// <param name="path">ログファイルのパス</param>
-        /// <param name="maxRetry">リトライ回数</param>
-        /// <param name="retryIntervalMs">リトライ間隔(ms)</param>
-        /// <returns>ログファイルの<see cref="StreamReader"/></returns>
-        private static async Task<StreamReader> OpenLogFileAsync(string path, int maxRetry = 5, int retryIntervalMs = 500, CancellationToken cancellationToken = default)
-        {
-            int retryCount = 0;
-            while (true)
-            {
-                try
-                {
-                    return new StreamReader(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete));
-                }
-                catch (FileNotFoundException)
-                {
-                    if (retryCount >= maxRetry) { throw; }
-                    retryCount++;
-                }
-
-                await Task.Delay(retryIntervalMs, cancellationToken).ConfigureAwait(false);
             }
         }
 
