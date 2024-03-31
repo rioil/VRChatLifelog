@@ -268,7 +268,8 @@ namespace VRChatLogWathcer.Models
          * こういう感じのメソッドをDBContextのメソッドとして追加する or 拡張メソッドを定義する or ヘルパークラスを作成する
          * とかしたほうが良いかもしれない
          */
-        // ここをメソッド化するべきじゃなかった気がする
+        // ~~ここをメソッド化するべきじゃなかった気がする~~
+        // DBクエリの条件にメソッドを混ぜるとクライアントサイドで評価しないといけなくなるので今のままではそもそも動かない
         // DBContextへのクエリ自体をメソッド化するべき
         private bool IsSameLocation(LocationHistory history, LogItem logItem)
         {
