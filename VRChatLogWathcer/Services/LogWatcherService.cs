@@ -195,9 +195,16 @@ namespace VRChatLogWathcer.Services
 
         private void StartReadingFile(string filePath)
         {
-            var logFile = new VRChatLogWatcher(filePath, _serviceProvider.GetRequiredService<ILogger<VRChatLogWatcher>>());
-            logFile.StartReading();
-            _watchingFiles.Add(logFile);
+            try
+            {
+                var logFile = new VRChatLogWatcher(filePath, _serviceProvider.GetRequiredService<ILogger<VRChatLogWatcher>>());
+                logFile.StartReading();
+                _watchingFiles.Add(logFile);
+            }
+            catch (FileNotFoundException ex)
+            {
+                _logger.LogWarning("Log file not found : {filePath}", ex.FileName);
+            }
         }
         #endregion private method
     }
