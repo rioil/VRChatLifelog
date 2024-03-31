@@ -23,6 +23,14 @@ namespace VRChatLogWathcer
 
         private ILogger<App>? _logger;
 
+        /// <summary>
+        /// データディレクトリ
+        /// </summary>
+        public static string DataDirectory { get; } = Path.Join(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "VRChatLifelog"
+        );
+
         [STAThread]
         public static void Main()
         {

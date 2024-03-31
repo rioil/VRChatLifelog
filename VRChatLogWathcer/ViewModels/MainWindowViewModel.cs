@@ -289,6 +289,16 @@ namespace VRChatLogWathcer.ViewModels
         private ListenerCommand<string>? _selectWorldNameCandidateCommand;
         public ListenerCommand<string> SelectWorldNameCandidateCommand => _selectWorldNameCandidateCommand ??= new ListenerCommand<string>(SelectWorldName);
         public ReactiveCommand FilterBySelectedWorldCommand { get; }
+
+        /// <summary>
+        /// データディレクトリをエクスプローラーで開きます．
+        /// </summary>
+        public static void OpenDataDirectoryInExplorer()
+        {
+            ExplorerUtil.OpenOrActivate(App.DataDirectory);
+        }
+        private ViewModelCommand? _openDataDirectoryInExplorerCommand;
+        public ViewModelCommand OpenDataDirectoryInExplorerCommand => _openDataDirectoryInExplorerCommand ??= new ViewModelCommand(OpenDataDirectoryInExplorer);
         #endregion
 
         /// <summary>
