@@ -36,7 +36,7 @@ namespace VRChatLogWathcer.Models
         /// <summary>
         /// VRChatのプロセス
         /// </summary>
-        private Process? _vrchatProcess;
+        private readonly Process? _vrchatProcess;
 
         /// <summary>
         /// ファイル読み取りタスク
@@ -183,7 +183,7 @@ namespace VRChatLogWathcer.Models
                 if (!reader.EndOfStream)
                 {
                     lastRead = DateTime.Now;
-                    var line = await reader.ReadLineAsync().ConfigureAwait(false);
+                    var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
                     if (string.IsNullOrEmpty(line))
                     {
                         if (LogItem.TryParse(buffer.ToArray(), out var item))
