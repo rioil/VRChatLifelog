@@ -1,7 +1,7 @@
-﻿using SHDocVw;
-using Shell32;
-using System;
+﻿using System;
+using System.Collections;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace VRChatLogWathcer.Utils
@@ -56,25 +56,53 @@ namespace VRChatLogWathcer.Utils
         /// <returns></returns>
         private static bool TryGetHwndOf(string path, out IntPtr hwnd)
         {
-            var shell = new Shell();
-            ShellWindows wins = shell.Windows();
-            foreach (InternetExplorer win in wins)
+            Type? comShellType = Type.GetTypeFromProgID("Shell.Application");
+            if (comShellType is null)
             {
-                if (!win.FullName.Equals(ExplorerPath, StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
+                hwnd = default;
+                return false;
+            }
 
-                var uri = new Uri(win.LocationURL);
-                if (path.Equals(uri.LocalPath, StringComparison.OrdinalIgnoreCase))
+            try
+            {
+                if (!TryCreateShell(comShellType, out var instance))
                 {
-                    hwnd = new IntPtr(win.HWND);
-                    return true;
+                    hwnd = default;
+                    return false;
                 }
+                using var shell = new COMObject(instance);
+                using var wins = new COMObject(shell.Object.Windows());
+                using var enumerator = new COMObject<IEnumerator>(wins.Object.GetEnumerator());
+
+                while (enumerator.Casted.MoveNext())
+                {
+                    using var win = new COMObject(enumerator.Casted.Current);
+                    if (!win.Object.FullName.Equals(ExplorerPath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    var uri = new Uri(win.Object.LocationURL);
+                    if (path.Equals(uri.LocalPath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        hwnd = new IntPtr(win.Object.HWND);
+                        return true;
+                    }
+                }
+            }
+            catch
+            {
+                // COM関連で発生した例外は握りつぶす
             }
 
             hwnd = default;
             return false;
+
+            static bool TryCreateShell(Type type, [NotNullWhen(true)] out object? instance)
+            {
+                instance = Activator.CreateInstance(type);
+                return instance is not null;
+            }
         }
 
         private class NativeMethods
