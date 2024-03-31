@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using System;
 using System.Windows.Forms;
 using VRChatLogWathcer.Extensions;
 
@@ -29,7 +30,7 @@ namespace VRChatLogWathcer.Models
             using var key = Registry.CurrentUser.OpenSubKey(RunKey, true, false);
             if (key is null) { return false; }
 
-            return key.TrySetValue(Application.ProductName, ExePath, RegistryValueKind.String);
+            return key.TrySetValue(Application.ProductName ?? throw new InvalidOperationException(), ExePath, RegistryValueKind.String);
         }
 
         /// <summary>
@@ -41,7 +42,7 @@ namespace VRChatLogWathcer.Models
             using var key = Registry.CurrentUser.OpenSubKey(RunKey, true, false);
             if (key is null) { return true; }
 
-            return key.TryDeleteValue(Application.ProductName);
+            return key.TryDeleteValue(Application.ProductName ?? throw new InvalidOperationException());
         }
 
         /// <summary>
@@ -53,7 +54,7 @@ namespace VRChatLogWathcer.Models
             using var key = Registry.CurrentUser.OpenSubKey(RunKey, true, false);
             if (key is null) { return false; }
 
-            return key.TryGetValue(Application.ProductName, out string? value) && value == ExePath;
+            return key.TryGetValue(Application.ProductName ?? throw new InvalidOperationException(), out string? value) && value == ExePath;
         }
     }
 }

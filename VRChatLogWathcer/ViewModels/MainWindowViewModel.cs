@@ -164,7 +164,7 @@ namespace VRChatLogWathcer.ViewModels
 
                 // TODO 期間指定の反映
                 var userNames = joinLeaveHistories.Select(h => h.PlayerName).Distinct().OrderBy(name => name);
-                MatchedUserNames.Value = userNames.ToArray();
+                MatchedUserNames.Value = [.. userNames];
 
                 // Join/Leave情報から対応するインスタンス情報を取得
                 result = joinLeaveHistories
@@ -183,7 +183,7 @@ namespace VRChatLogWathcer.ViewModels
 
                 // TODO 期間指定の反映
                 var worldNames = result.Select(l => l.WorldName).Distinct().OrderBy(name => name);
-                MatchedWorldNames.Value = worldNames.ToArray();
+                MatchedWorldNames.Value = [.. worldNames];
             }
 
             // 日付による絞り込み
@@ -210,7 +210,7 @@ namespace VRChatLogWathcer.ViewModels
                 result = result.OrderByDescending(h => h.Joined);
             }
 
-            LocationHistories.Value = result.ToArray();
+            LocationHistories.Value = [.. result];
             if (SelectedLocationHistory.Value is not null && LocationHistories.Value.Contains(SelectedLocationHistory.Value))
             {
                 UpdateJoinLeaveHistory(SelectedLocationHistory.Value);
@@ -223,7 +223,7 @@ namespace VRChatLogWathcer.ViewModels
         /// 選択された場所で撮影された写真を表示します．
         /// </summary>
         /// <param name="location"></param>
-        public async void ShowPicturesTakenHere(LocationHistory location)
+        public static async void ShowPicturesTakenHere(LocationHistory location)
         {
             var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "VRChat");
             var title = location.WorldName;
@@ -320,7 +320,7 @@ namespace VRChatLogWathcer.ViewModels
         {
             using var dbContext = new LifelogContext();
             var histories = dbContext.JoinLeaveHistories.Where(h => h.LocationHistory == location).OrderBy(h => h.Joined);
-            JoinLeaveHistories.Value = histories.ToArray();
+            JoinLeaveHistories.Value = [.. histories];
         }
     }
 }
