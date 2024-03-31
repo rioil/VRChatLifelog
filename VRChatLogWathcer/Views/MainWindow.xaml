@@ -68,7 +68,17 @@
         <MenuItem Header="終了(_X)" />
       </MenuItem>
       <MenuItem Header="ツール(_T)">
-        <MenuItem Command="{Binding OpenSettingWindowCommand}" Header="オプション(_O)" />
+        <MenuItem Command="{Binding OpenDataDirectoryInExplorerCommand}" Header="データフォルダをエクスプローラーで開く(_D)">
+          <MenuItem.Icon>
+            <Image Source="{iconPacks:CooliconsImage Kind=FolderOpen}" />
+          </MenuItem.Icon>
+        </MenuItem>
+        <Separator />
+        <MenuItem Command="{Binding OpenSettingWindowCommand}" Header="オプション(_O)">
+          <MenuItem.Icon>
+            <Image Source="{iconPacks:CooliconsImage Kind=Settings}" />
+          </MenuItem.Icon>
+        </MenuItem>
       </MenuItem>
     </Menu>
 
