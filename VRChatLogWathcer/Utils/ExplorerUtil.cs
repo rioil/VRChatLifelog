@@ -2,9 +2,7 @@
 using Shell32;
 using System;
 using System.Diagnostics;
-using Windows.Win32;
-using Windows.Win32.Foundation;
-using Windows.Win32.UI.WindowsAndMessaging;
+using System.Runtime.InteropServices;
 
 namespace VRChatLogWathcer.Utils
 {
@@ -24,11 +22,11 @@ namespace VRChatLogWathcer.Utils
         {
             if (TryGetHwndOf(path, out var hwnd))
             {
-                if (PInvoke.IsIconic(hwnd))
+                if (NativeMethods.IsIconic(hwnd))
                 {
-                    PInvoke.ShowWindowAsync(hwnd, SHOW_WINDOW_CMD.SW_RESTORE);
+                    NativeMethods.ShowWindow(hwnd, NativeMethods.SW_RESTORE);
                 }
-                return PInvoke.SetForegroundWindow(hwnd);
+                return NativeMethods.SetForegroundWindow(hwnd);
             }
 
             return Open(path);
@@ -56,7 +54,7 @@ namespace VRChatLogWathcer.Utils
         /// <param name="path">パス</param>
         /// <param name="hwnd">ウィンドウハンドル</param>
         /// <returns></returns>
-        private static bool TryGetHwndOf(string path, out HWND hwnd)
+        private static bool TryGetHwndOf(string path, out IntPtr hwnd)
         {
             var shell = new Shell();
             ShellWindows wins = shell.Windows();
@@ -70,13 +68,30 @@ namespace VRChatLogWathcer.Utils
                 var uri = new Uri(win.LocationURL);
                 if (path.Equals(uri.LocalPath, StringComparison.OrdinalIgnoreCase))
                 {
-                    hwnd = new HWND(new IntPtr(win.HWND));
+                    hwnd = new IntPtr(win.HWND);
                     return true;
                 }
             }
 
             hwnd = default;
             return false;
+        }
+
+        private class NativeMethods
+        {
+            [DllImport("user32.dll")]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+            [DllImport("user32.dll")]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            public static extern bool IsIconic(IntPtr hWnd);
+
+            [DllImport("user32.dll")]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+            public const int SW_RESTORE = 9;
         }
     }
 }
