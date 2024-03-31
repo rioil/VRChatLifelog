@@ -382,6 +382,16 @@
                         </Image>
                       </MenuItem.Icon>
                     </MenuItem>
+
+                    <Separator/>
+                    
+                    <MenuItem Header="ワールドのページをブラウザで開く"
+                              Command="{Binding PlacementTarget.Tag.OpenWorldInBrowserCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                              CommandParameter="{Binding}">
+                      <MenuItem.Icon>
+                        <Image Source="{iconPacks:CooliconsImage Kind=ExternalLink}" />
+                      </MenuItem.Icon>
+                    </MenuItem>
                   </ContextMenu>
                 </Setter.Value>
               </Setter>
