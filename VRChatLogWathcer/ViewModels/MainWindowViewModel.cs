@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Reactive.Bindings;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -299,6 +300,16 @@ namespace VRChatLogWathcer.ViewModels
         }
         private ViewModelCommand? _openDataDirectoryInExplorerCommand;
         public ViewModelCommand OpenDataDirectoryInExplorerCommand => _openDataDirectoryInExplorerCommand ??= new ViewModelCommand(OpenDataDirectoryInExplorer);
+
+        /// <summary>
+        /// ワールドのページをブラウザで開きます．
+        /// </summary>
+        public static void OpenWorldInBrowser(LocationHistory locationHistory)
+        {
+            Process.Start("explorer.exe", $"https://vrchat.com/home/world/{locationHistory.WorldId}");
+        }
+        private ListenerCommand<LocationHistory>? _openWorldInBrowserCommand;
+        public ListenerCommand<LocationHistory> OpenWorldInBrowserCommand => _openWorldInBrowserCommand ??= new ListenerCommand<LocationHistory>(OpenWorldInBrowser);
         #endregion
 
         /// <summary>
