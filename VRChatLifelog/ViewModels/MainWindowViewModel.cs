@@ -210,7 +210,7 @@ namespace VRChatLifelog.ViewModels
                 result = result.OrderByDescending(h => h.Joined);
             }
 
-            LocationHistories.Value = [.. result];
+            LocationHistories.Value = await result.ToArrayAsync();
             if (SelectedLocationHistory.Value is not null && LocationHistories.Value.Contains(SelectedLocationHistory.Value))
             {
                 UpdateJoinLeaveHistory(SelectedLocationHistory.Value);

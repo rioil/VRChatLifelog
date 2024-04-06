@@ -8,9 +8,7 @@
         xmlns:data="clr-namespace:VRChatLifelog.Data"
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         xmlns:l="http://schemas.livet-mvvm.net/2011/wpf"
-        xmlns:m="clr-namespace:VRChatLifelog.Models"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:v="clr-namespace:VRChatLifelog.Views"
         xmlns:vm="clr-namespace:VRChatLifelog.ViewModels"
         Title="VRChat Lifelog" Width="900"
         Height="600" MinWidth="900"
@@ -325,11 +323,13 @@
         </Grid.ColumnDefinitions>
 
         <!--  場所の履歴情報  -->
+        <!--  MEMO: 仮想化のためにコンテンツ単位でのスクロールを使用する  -->
         <ListView Grid.Column="0"
                   ItemsSource="{Binding LocationHistories.Value}"
-                  ScrollViewer.CanContentScroll="False"
                   SelectedItem="{Binding SelectedLocationHistory.Value}"
-                  SelectionMode="Single">
+                  SelectionMode="Single"
+                  ScrollViewer.CanContentScroll="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling">
           <ListView.ItemTemplate>
             <DataTemplate>
               <Grid>
@@ -384,7 +384,7 @@
                     </MenuItem>
 
                     <Separator/>
-                    
+
                     <MenuItem Header="ワールドのページをブラウザで開く"
                               Command="{Binding PlacementTarget.Tag.OpenWorldInBrowserCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                               CommandParameter="{Binding}">
