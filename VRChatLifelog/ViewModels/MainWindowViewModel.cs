@@ -157,10 +157,13 @@ namespace VRChatLifelog.ViewModels
             if (FilterByPerson.Value && !string.IsNullOrEmpty(PersonQuery.Value))
             {
                 // 対象人物のJoin/Leave履歴を取得
-                var joinLeaveHistories = await dbContext.JoinLeaveHistories
-                    .Where(h => h.PlayerName.Contains(PersonQuery.Value))
-                    .Include(h => h.LocationHistory)
-                    .ToArrayAsync();
+                var joinLeaveHistories = dbContext.JoinLeaveHistories
+                    .Where(h => h.PlayerName.Contains(PersonQuery.Value));
+                /* 
+                 * MEMO:
+                 * 文字列一致のクエリが複数回実行されることになるが，配列化してキャッシュしてはいけない
+                 * 配列はIAsyncEnumerableを実装していないため，LocationHistoriesを作成する最後のToArrayAsyncで例外が発生してしまう
+                 */
 
                 // TODO 期間指定の反映
                 var userNames = joinLeaveHistories.Select(h => h.PlayerName).Distinct().OrderBy(name => name);
@@ -168,6 +171,7 @@ namespace VRChatLifelog.ViewModels
 
                 // Join/Leave情報から対応するインスタンス情報を取得
                 result = joinLeaveHistories
+                    .Include(h => h.LocationHistory)
                     .Select(joinleave => joinleave.LocationHistory)
                     .AsQueryable();
             }
