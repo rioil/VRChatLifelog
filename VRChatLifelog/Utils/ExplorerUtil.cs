@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace VRChatLifelog.Utils
 {
-    internal static class ExplorerUtil
+    internal static partial class ExplorerUtil
     {
         /// <summary>
         /// エクスプローラーの実行ファイルパス
@@ -105,19 +105,19 @@ namespace VRChatLifelog.Utils
             }
         }
 
-        private class NativeMethods
+        private partial class NativeMethods
         {
-            [DllImport("user32.dll")]
+            [LibraryImport("user32.dll")]
             [return: MarshalAs(UnmanagedType.Bool)]
-            public static extern bool SetForegroundWindow(IntPtr hWnd);
+            public static partial bool SetForegroundWindow(IntPtr hWnd);
 
-            [DllImport("user32.dll")]
+            [LibraryImport("user32.dll")]
             [return: MarshalAs(UnmanagedType.Bool)]
-            public static extern bool IsIconic(IntPtr hWnd);
+            public static partial bool IsIconic(IntPtr hWnd);
 
-            [DllImport("user32.dll")]
+            [LibraryImport("user32.dll")]
             [return: MarshalAs(UnmanagedType.Bool)]
-            public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+            public static partial bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
             public const int SW_RESTORE = 9;
         }
