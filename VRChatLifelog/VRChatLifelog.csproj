@@ -10,6 +10,7 @@
 		<ApplicationIcon>Resources\icon.ico</ApplicationIcon>
 		<VersionPrefix>1.1.4</VersionPrefix>
 		<VersionSuffix></VersionSuffix>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 
