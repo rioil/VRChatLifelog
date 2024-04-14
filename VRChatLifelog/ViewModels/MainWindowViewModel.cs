@@ -210,10 +210,9 @@ namespace VRChatLifelog.ViewModels
                         result = result.Where(h => h.Left == null || h.Left < end);
                     }
                 }
-
-                result = result.OrderByDescending(h => h.Joined);
             }
 
+            result = result.OrderByDescending(h => h.Joined);
             LocationHistories.Value = await result.ToArrayAsync();
             if (SelectedLocationHistory.Value is not null && LocationHistories.Value.Contains(SelectedLocationHistory.Value))
             {
