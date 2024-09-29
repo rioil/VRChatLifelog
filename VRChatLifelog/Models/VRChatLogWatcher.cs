@@ -54,6 +54,7 @@ namespace VRChatLifelog.Models
         /// <summary>
         /// VRChatのプロセスが実行中か
         /// </summary>
+        /// <remarks>VRChatのプロセスが取得できなかった場合は常に<see langword="true"/>を返します．</remarks>
         public bool IsProcessRunning => (!_vrchatProcess?.HasExited) ?? true;
 
         /// <summary>
@@ -62,7 +63,7 @@ namespace VRChatLifelog.Models
         public string WatchingFileFullPath { get; }
 
         /// <summary>
-        /// 
+        /// 監視するファイルのパスを指定してインスタンスを作成します．
         /// </summary>
         /// <param name="watchingFileFullPath"></param>
         /// <param name="logger"></param>
@@ -180,7 +181,19 @@ namespace VRChatLifelog.Models
                 if (lastRead > lastWriteTime)
                 {
                     reader.BaseStream.Seek(currentFileLength, SeekOrigin.Begin);
-                    // TODO: _currentLocationと_currentInstanceを初期化
+
+                    // 最後の履歴からロケーションとインスタンス情報を初期化
+                    var lastLocation = dbContext.LocationHistories.OrderBy(l => l.Joined)
+                                                                  .LastOrDefault(l => l.LogFileInfo == logFileInfo);
+                    if (lastLocation is not null)
+                    {
+                        _currentLocation = lastLocation;
+                        _currentInstance = new Instance(lastLocation.WorldId,
+                                                        lastLocation.InstanceId,
+                                                        lastLocation.Type,
+                                                        lastLocation.Region,
+                                                        lastLocation.MasterId);
+                    }
                 }
             }
 
