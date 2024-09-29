@@ -40,11 +40,11 @@ namespace VRChatLifelog.Controls
 
             var mainIconKind = instance.InstanceType switch
             {
-                EInstanceType.Public => PackIconCooliconsKind.GroupAlt,
-                EInstanceType.Friends or EInstanceType.FriendsPlus => PackIconCooliconsKind.User,
+                EInstanceType.Public => PackIconCooliconsKind.Globe,
+                EInstanceType.Friends or EInstanceType.FriendsPlus => PackIconCooliconsKind.User01,
                 EInstanceType.Invite or EInstanceType.InvitePlus => PackIconCooliconsKind.Mail,
-                EInstanceType.Group or EInstanceType.GroupPlus or EInstanceType.GroupPublic => PackIconCooliconsKind.Group,
-                EInstanceType.Unknown => PackIconCooliconsKind.HelpQuestionmark,
+                EInstanceType.Group or EInstanceType.GroupPlus or EInstanceType.GroupPublic => PackIconCooliconsKind.UsersGroup,
+                EInstanceType.Unknown => PackIconCooliconsKind.Help,
                 _ => throw new NotImplementedException(),
             };
             var mainIcon = GetIconImage(mainIconKind);
@@ -54,12 +54,12 @@ namespace VRChatLifelog.Controls
             {
                 EInstanceType.Public => null,
                 EInstanceType.Friends => null,
-                EInstanceType.FriendsPlus => PackIconCooliconsKind.Plus,
+                EInstanceType.FriendsPlus => PackIconCooliconsKind.AddPlus,
                 EInstanceType.Invite => null,
-                EInstanceType.InvitePlus => PackIconCooliconsKind.Plus,
+                EInstanceType.InvitePlus => PackIconCooliconsKind.AddPlus,
                 EInstanceType.Group => null,
-                EInstanceType.GroupPlus => PackIconCooliconsKind.Plus,
-                EInstanceType.GroupPublic => PackIconCooliconsKind.GroupAlt,
+                EInstanceType.GroupPlus => PackIconCooliconsKind.AddPlus,
+                EInstanceType.GroupPublic => PackIconCooliconsKind.UsersGroup,
                 EInstanceType.Unknown => null,
                 _ => throw new NotImplementedException(),
             };
