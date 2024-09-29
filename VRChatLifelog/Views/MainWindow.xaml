@@ -150,7 +150,7 @@
               <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <iconPacks:PackIconCoolicons Grid.Column="0" Kind="User"
+            <iconPacks:PackIconCoolicons Grid.Column="0" Kind="User01"
                                          ToolTip="ユーザー" />
             <CheckBox Grid.Column="1"
                       IsChecked="{Binding FilterByPerson.Value}"
@@ -204,7 +204,7 @@
               <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <iconPacks:PackIconCoolicons Grid.Column="0" Kind="LocationOutline"
+            <iconPacks:PackIconCoolicons Grid.Column="0" Kind="MapPin"
                                          ToolTip="ワールド" />
             <CheckBox Grid.Column="1"
                       IsChecked="{Binding FilterByWorldName.Value}"
@@ -256,7 +256,7 @@
 
             <Button Command="{Binding ApplyFilterCommand}">
               <StackPanel Orientation="Horizontal">
-                <iconPacks:PackIconCoolicons Height="12" Kind="FilterOutline" />
+                <iconPacks:PackIconCoolicons Height="12" Kind="Filter" />
                 <TextBlock Text="絞り込み" />
               </StackPanel>
             </Button>
@@ -285,7 +285,7 @@
                 ToolTip="選択した場所で撮影した写真を一覧表示します．"
                 ToolTipService.ShowOnDisabled="True">
           <StackPanel Orientation="Horizontal">
-            <iconPacks:PackIconCoolicons Height="12" Kind="Image" />
+            <iconPacks:PackIconCoolicons Height="12" Kind="Image02" />
             <TextBlock Text="選択した場所で撮影した写真を表示" />
           </StackPanel>
         </Button>
@@ -297,7 +297,7 @@
                 ToolTip="選択したワールドで絞り込みます．"
                 ToolTipService.ShowOnDisabled="True">
           <StackPanel Orientation="Horizontal">
-            <iconPacks:PackIconCoolicons Height="12" Kind="LocationOutline" />
+            <iconPacks:PackIconCoolicons Height="12" Kind="MapPin" />
             <TextBlock Text="選択したワールドで絞り込み" />
           </StackPanel>
         </Button>
@@ -309,7 +309,7 @@
                 ToolTip="選択したユーザーで絞り込みます．"
                 ToolTipService.ShowOnDisabled="True">
           <StackPanel Orientation="Horizontal">
-            <iconPacks:PackIconCoolicons Height="12" Kind="User" />
+            <iconPacks:PackIconCoolicons Height="12" Kind="User01" />
             <TextBlock Text="選択したユーザーで絞り込み" />
           </StackPanel>
         </Button>
@@ -360,7 +360,7 @@
                               CommandParameter="{Binding}"
                               Header="ここで撮影した写真を表示">
                       <MenuItem.Icon>
-                        <Image Source="{iconPacks:CooliconsImage Kind=Image}" />
+                        <Image Source="{iconPacks:CooliconsImage Kind=Image02}" />
                       </MenuItem.Icon>
                     </MenuItem>
 
@@ -373,8 +373,8 @@
                             <DrawingImage PresentationOptions:Freeze="True">
                               <DrawingImage.Drawing>
                                 <DrawingGroup>
-                                  <ImageDrawing ImageSource="{iconPacks:CooliconsImage Kind=FilterOutline}" Rect="0 0 12 12" />
-                                  <ImageDrawing ImageSource="{iconPacks:CooliconsImage Kind=LocationOutline}" Rect="9 7 7 9" />
+                                  <ImageDrawing ImageSource="{iconPacks:CooliconsImage Kind=Filter}" Rect="0 0 12 12" />
+                                  <ImageDrawing ImageSource="{iconPacks:CooliconsImage Kind=MapPin}" Rect="9 7 7 9" />
                                 </DrawingGroup>
                               </DrawingImage.Drawing>
                             </DrawingImage>
@@ -446,8 +446,8 @@
                             <DrawingImage PresentationOptions:Freeze="True">
                               <DrawingImage.Drawing>
                                 <DrawingGroup>
-                                  <ImageDrawing ImageSource="{iconPacks:CooliconsImage Kind=FilterOutline}" Rect="0 0 12 12" />
-                                  <ImageDrawing ImageSource="{iconPacks:CooliconsImage Kind=User}" Rect="8 7 8 9" />
+                                  <ImageDrawing ImageSource="{iconPacks:CooliconsImage Kind=Filter}" Rect="0 0 12 12" />
+                                  <ImageDrawing ImageSource="{iconPacks:CooliconsImage Kind=User01}" Rect="8 7 8 9" />
                                 </DrawingGroup>
                               </DrawingImage.Drawing>
                             </DrawingImage>
