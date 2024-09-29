@@ -1,0 +1,4 @@
+﻿RmStartSession
+RmRegisterResources
+RmGetList
+RmEndSession

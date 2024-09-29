@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using VRChatLifelog.Data;
 using VRChatLifelog.Extensions;
+using VRChatLifelog.Utils;
 
 namespace VRChatLifelog.Models
 {
@@ -53,7 +54,7 @@ namespace VRChatLifelog.Models
         /// <summary>
         /// VRChatのプロセスが実行中か
         /// </summary>
-        public bool IsProcessRunning => (!_vrchatProcess?.HasExited) ?? true;   // TODO プロセスを取得していないので常にtrue
+        public bool IsProcessRunning => (!_vrchatProcess?.HasExited) ?? true;
 
         /// <summary>
         /// 監視中のファイルのフルパス
@@ -89,6 +90,8 @@ namespace VRChatLifelog.Models
                 dbContext.SaveChanges();
             }
             _logFileInfoId = fileInfo.Id;
+
+            _vrchatProcess = GetVRChatProcess();
         }
 
         /// <summary>
@@ -177,6 +180,7 @@ namespace VRChatLifelog.Models
                 if (lastRead > lastWriteTime)
                 {
                     reader.BaseStream.Seek(currentFileLength, SeekOrigin.Begin);
+                    // TODO: _currentLocationと_currentInstanceを初期化
                 }
             }
 
@@ -322,6 +326,16 @@ namespace VRChatLifelog.Models
                 lifelogContext.LocationHistories.Update(history);
                 _logger.LogWarning("Collapsed location history (ID:{id}) was recovered.", history.Id);
             }
+        }
+
+        /// <summary>
+        /// 監視中のファイルをロックしているVRChatのプロセスを取得します．
+        /// </summary>
+        /// <returns>VRChatのプロセス，取得できなかった場合は<see langword="null"/></returns>
+        private Process? GetVRChatProcess()
+        {
+            var processes = RestartManagerUtil.GetFileLockingProcesses(WatchingFileFullPath);
+            return processes.FirstOrDefault(p => p.ProcessName == "VRChat");
         }
 
         /// <summary>
