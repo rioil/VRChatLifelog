@@ -2,8 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using VRChatLifelog.Data;
@@ -26,12 +28,12 @@ namespace VRChatLifelog.Models
         /// <summary>
         /// 現在のインスタンス
         /// </summary>
-        private Instance _currentInstance = default!;           // 参照される時点ではnullでない値が入っているはず
+        private Instance? _currentInstance;
 
         /// <summary>
         /// 現在のロケーション
         /// </summary>
-        private LocationHistory _currentLocation = default!;
+        private LocationHistory? _currentLocation;
 
         /// <summary>
         /// VRChatのプロセス
@@ -234,6 +236,8 @@ namespace VRChatLifelog.Models
             // プレイヤーjoinログ
             if (VRChatLogUtil.TryParsePlayerJoinLog(item.Content, out var joinLog))
             {
+                ThrowInvalidOperationExceptionIfNull(_currentLocation);
+
                 var joinLeaveHistory = dbContext.JoinLeaveHistories.Where(h => h.LocationHistory.Id == _currentLocation.Id && h.PlayerName == joinLog.PlayerName && h.Joined == item.Time);
                 if (!joinLeaveHistory.Any())
                 {
@@ -244,6 +248,8 @@ namespace VRChatLifelog.Models
             // プレイヤーleaveログ
             else if (VRChatLogUtil.TryParsePlayerLeftLog(item.Content, out var leftLog))
             {
+                ThrowInvalidOperationExceptionIfNull(_currentLocation);
+
                 // MEMO:ローカルテスト時は同名のプレイヤーが複数人存在することになるためSingleOrDefaultではなく，FirstOrDefaultを用いる
                 var history = dbContext.JoinLeaveHistories.FirstOrDefault(h => h.LocationHistoryId == _currentLocation.Id && h.PlayerName == leftLog.PlayerName && h.Joined <= item.Time && h.Left == null);
                 if (history is null) { return; }   // TODO 見つからないのは正常ではないのでログ出力等の対応が必要
@@ -271,6 +277,8 @@ namespace VRChatLifelog.Models
             // ルームjoinログ（ワールド名取得）
             else if (VRChatLogUtil.TryParseRoomJoinLog(item.Content, out var roomJoinLog))
             {
+                ThrowInvalidOperationExceptionIfNull(_currentInstance);
+
                 _currentInstance.WorldName = roomJoinLog.WorldName;
 
                 // ワールドjoinログ -> ルームjoinログの順に出力されるため，ルームjoinログを読み込んだ時点で新しいロケーションを作成
@@ -313,6 +321,21 @@ namespace VRChatLifelog.Models
                 history.Left = lastWriteTime;
                 lifelogContext.LocationHistories.Update(history);
                 _logger.LogWarning("Collapsed location history (ID:{id}) was recovered.", history.Id);
+            }
+        }
+
+        /// <summary>
+        /// 値が<see langword="null"/>の場合に<see cref="InvalidOperationException"/>をスローします．
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="value">値</param>
+        /// <param name="name">値の式文字列</param>
+        /// <exception cref="InvalidOperationException"></exception>
+        private static void ThrowInvalidOperationExceptionIfNull<T>([NotNull] T? value, [CallerArgumentExpression(nameof(value))] string? name = null)
+        {
+            if (value is null)
+            {
+                throw new InvalidOperationException($"{name} cannot be null.");
             }
         }
     }
