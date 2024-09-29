@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using VRChatLifelog.Data;
 using VRChatLifelog.Extensions;
+using VRChatLifelog.Utils;
 
 namespace VRChatLifelog.Models
 {
@@ -53,7 +54,8 @@ namespace VRChatLifelog.Models
         /// <summary>
         /// VRChatのプロセスが実行中か
         /// </summary>
-        public bool IsProcessRunning => (!_vrchatProcess?.HasExited) ?? true;   // TODO プロセスを取得していないので常にtrue
+        /// <remarks>VRChatのプロセスが取得できなかった場合は常に<see langword="true"/>を返します．</remarks>
+        public bool IsProcessRunning => (!_vrchatProcess?.HasExited) ?? true;
 
         /// <summary>
         /// 監視中のファイルのフルパス
@@ -61,7 +63,7 @@ namespace VRChatLifelog.Models
         public string WatchingFileFullPath { get; }
 
         /// <summary>
-        /// 
+        /// 監視するファイルのパスを指定してインスタンスを作成します．
         /// </summary>
         /// <param name="watchingFileFullPath"></param>
         /// <param name="logger"></param>
@@ -89,6 +91,8 @@ namespace VRChatLifelog.Models
                 dbContext.SaveChanges();
             }
             _logFileInfoId = fileInfo.Id;
+
+            _vrchatProcess = GetVRChatProcess();
         }
 
         /// <summary>
@@ -177,6 +181,19 @@ namespace VRChatLifelog.Models
                 if (lastRead > lastWriteTime)
                 {
                     reader.BaseStream.Seek(currentFileLength, SeekOrigin.Begin);
+
+                    // 最後の履歴からロケーションとインスタンス情報を初期化
+                    var lastLocation = dbContext.LocationHistories.OrderBy(l => l.Joined)
+                                                                  .LastOrDefault(l => l.LogFileInfo == logFileInfo);
+                    if (lastLocation is not null)
+                    {
+                        _currentLocation = lastLocation;
+                        _currentInstance = new Instance(lastLocation.WorldId,
+                                                        lastLocation.InstanceId,
+                                                        lastLocation.Type,
+                                                        lastLocation.Region,
+                                                        lastLocation.MasterId);
+                    }
                 }
             }
 
@@ -322,6 +339,16 @@ namespace VRChatLifelog.Models
                 lifelogContext.LocationHistories.Update(history);
                 _logger.LogWarning("Collapsed location history (ID:{id}) was recovered.", history.Id);
             }
+        }
+
+        /// <summary>
+        /// 監視中のファイルをロックしているVRChatのプロセスを取得します．
+        /// </summary>
+        /// <returns>VRChatのプロセス，取得できなかった場合は<see langword="null"/></returns>
+        private Process? GetVRChatProcess()
+        {
+            var processes = RestartManagerUtil.GetFileLockingProcesses(WatchingFileFullPath);
+            return processes.FirstOrDefault(p => p.ProcessName == "VRChat");
         }
 
         /// <summary>
