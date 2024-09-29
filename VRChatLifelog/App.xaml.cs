@@ -1,6 +1,5 @@
 ﻿using Livet;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -48,13 +47,6 @@ namespace VRChatLifelog
                     services.AddHostedService(p => p.GetRequiredService<LogWatcherService>());
                     services.AddOptions<LogWatchOption>();
                     services.AddHostedService<NotifyIconService>();
-
-                    //services.AddSingleton<MainWindow>();
-                })
-                .ConfigureHostConfiguration(config =>
-                {
-                    config.SetBasePath(Directory.GetCurrentDirectory());
-                    config.AddJsonFile("appsettings.json", true, true);
                 })
                 .ConfigureLogging(logging =>
                 {
@@ -152,7 +144,7 @@ namespace VRChatLifelog
             }
 
             int historyId = 1;
-            foreach(var history in context.JoinLeaveHistories.OrderBy(h => h.Joined))
+            foreach (var history in context.JoinLeaveHistories.OrderBy(h => h.Joined))
             {
                 history.Id = historyId++;
             }
