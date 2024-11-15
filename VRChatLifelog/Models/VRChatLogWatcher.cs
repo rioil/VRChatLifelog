@@ -206,7 +206,7 @@ namespace VRChatLifelog.Models
                     var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
                     if (string.IsNullOrEmpty(line))
                     {
-                        if (LogItem.TryParse(buffer.ToArray(), out var item))
+                        if (LogItem.TryParse([.. buffer], out var item))
                         {
                             AddLogItem(item);
                         }

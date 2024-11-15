@@ -17,12 +17,18 @@ namespace VRChatLifelog.Services
     /// <summary>
     /// VRChatのログの監視を行います．
     /// </summary>
-    internal class LogWatcherService : BackgroundService
+    /// <remarks>
+    /// ログファイルのディレクトリを指定してインスタンスを作成します．
+    /// </remarks>
+    /// <param name="settings">ログ監視設定</param>
+    /// <param name="serviceProvider"></param>
+    internal partial class LogWatcherService(IOptions<LogWatchOption> settings, IServiceProvider serviceProvider) : BackgroundService
     {
         /// <summary>
         /// ログファイル名の正規表現パターン
         /// </summary>
-        private readonly Regex LogFileNamePattern = new(@"^output_log_(\d{4}-\d{2}-\d{2}_)?\d{2}-\d{2}-\d{2}.txt$");
+        [GeneratedRegex(@"^output_log_(\d{4}-\d{2}-\d{2}_)?\d{2}-\d{2}-\d{2}.txt$")]
+        private partial Regex LogFileNamePattern { get; }
 
         /// <summary>
         /// ログファイル名のフィルターパターン
@@ -38,17 +44,17 @@ namespace VRChatLifelog.Services
         /// <summary>
         /// ログ監視設定
         /// </summary>
-        private readonly LogWatchOption _settings;
+        private readonly LogWatchOption _settings = settings.Value;
 
         /// <summary>
         /// logger
         /// </summary>
-        private readonly ILogger<LogWatcherService> _logger;
+        private readonly ILogger<LogWatcherService> _logger = serviceProvider.GetRequiredService<ILogger<LogWatcherService>>();
 
         /// <summary>
         /// Service Provider
         /// </summary>
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceProvider _serviceProvider = serviceProvider;
 
         /// <summary>
         /// 監視中のログファイル
@@ -64,18 +70,6 @@ namespace VRChatLifelog.Services
         /// 監視中のログファイルの数
         /// </summary>
         public int WatchingFileCount => _watchingFiles.Count;
-
-        /// <summary>
-        /// ログファイルのディレクトリを指定してインスタンスを作成します．
-        /// </summary>
-        /// <param name="settings">ログ監視設定</param>
-        /// <param name="serviceProvider"></param>
-        public LogWatcherService(IOptions<LogWatchOption> settings, IServiceProvider serviceProvider)
-        {
-            _settings = settings.Value;
-            _serviceProvider = serviceProvider;
-            _logger = serviceProvider.GetRequiredService<ILogger<LogWatcherService>>();
-        }
 
         #region method
         /// <summary>
@@ -153,7 +147,7 @@ namespace VRChatLifelog.Services
                 .Where(path => LogFileNamePattern.IsMatch(Path.GetFileName(path)))
                 .OrderBy(path => File.GetCreationTime(path))
                 .ToArray();
-            if (!logFiles.Any())
+            if (logFiles.Length == 0)
             {
                 _logger.LogInformation("No log file found");
                 return;
@@ -223,14 +217,9 @@ namespace VRChatLifelog.Services
             = Path.GetFullPath(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"..\LocalLow\VRChat\VRChat\"));
     }
 
-    public class WatchingFileCountChangedEventArgs : EventArgs
+    public class WatchingFileCountChangedEventArgs(int count) : EventArgs
     {
-        public int Count { get; set; }
-
-        public WatchingFileCountChangedEventArgs(int count)
-        {
-            Count = count;
-        }
+        public int Count { get; set; } = count;
     }
     public delegate void WatchingFileCountChangedEventHandler(object sender, WatchingFileCountChangedEventArgs args);
 }

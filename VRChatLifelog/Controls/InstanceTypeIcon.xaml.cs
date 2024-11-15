@@ -20,7 +20,7 @@ namespace VRChatLifelog.Controls
             InitializeComponent();
         }
 
-        private static PackIconCooliconsKindToImageConverter _iconConverter = new();
+        private static readonly PackIconCooliconsKindToImageConverter _iconConverter = new();
 
         /// <summary>
         /// インスタンスタイプ
