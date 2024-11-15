@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -268,7 +269,9 @@ namespace VRChatLifelog.Models
                 ThrowInvalidOperationExceptionIfNull(_currentLocation);
 
                 // MEMO:ローカルテスト時は同名のプレイヤーが複数人存在することになるためSingleOrDefaultではなく，FirstOrDefaultを用いる
-                var history = dbContext.JoinLeaveHistories.FirstOrDefault(h => h.LocationHistoryId == _currentLocation.Id && h.PlayerName == leftLog.PlayerName && h.Joined <= item.Time && h.Left == null);
+                var history = dbContext.JoinLeaveHistories
+                    .Include(h => h.LocationHistory)
+                    .FirstOrDefault(h => h.LocationHistoryId == _currentLocation.Id && h.PlayerName == leftLog.PlayerName && h.Joined <= item.Time && h.Left == null);
                 if (history is null) { return; }   // TODO 見つからないのは正常ではないのでログ出力等の対応が必要
 
                 history.Left = item.Time;
@@ -276,12 +279,8 @@ namespace VRChatLifelog.Models
 
                 if (history.IsLocal)
                 {
-                    var locHistory = dbContext.LocationHistories.SingleOrDefault(h => h.LogFileInfoId == _logFileInfoId && h.Joined <= item.Time && h.Left == null);
-                    if (locHistory is not null)
-                    {
-                        locHistory.Left = item.Time;
-                        dbContext.LocationHistories.Update(locHistory);
-                    }
+                    history.LocationHistory.Left = item.Time;
+                    dbContext.LocationHistories.Update(history.LocationHistory);
                 }
 
                 dbContext.SaveChanges();
