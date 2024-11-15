@@ -8,7 +8,7 @@
 		<Nullable>enable</Nullable>
 		<EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
 		<ApplicationIcon>Resources\icon.ico</ApplicationIcon>
-		<VersionPrefix>1.1.4</VersionPrefix>
+		<VersionPrefix>1.2.0</VersionPrefix>
 		<VersionSuffix></VersionSuffix>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
