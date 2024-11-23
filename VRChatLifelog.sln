@@ -7,6 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VRChatLifelog", "VRChatLife
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VRChatLifelog.Tests", "VRChatLifelog.Tests\VRChatLifelog.Tests.csproj", "{667D8B93-548D-4F0B-8757-2D35C27A04AA}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ソリューション項目", "ソリューション項目", "{C1B6AE03-6F69-418B-A1F9-EABD75B35BBF}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
