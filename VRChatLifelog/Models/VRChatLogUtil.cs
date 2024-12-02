@@ -60,8 +60,9 @@ public static class VRChatLogUtil
         }
 
         var playerName = match.Groups["player"].Value;
+        var playerId = match.Groups["playerId"].Value;
 
-        leftLog = new PlayerLeftLog(playerName);
+        leftLog = new PlayerLeftLog(playerName, playerId);
         return true;
     }
 
@@ -156,7 +157,8 @@ public record PlayerJoinLog(string PlayerName, bool IsLocal);
 /// プレイヤーLeftログ
 /// </summary>
 /// <param name="PlayerName">プレイヤー名</param>
-public record PlayerLeftLog(string PlayerName);
+/// <param name="PlayerId"プレイヤーID</param>
+public record PlayerLeftLog(string PlayerName, string PlayerId);
 
 /// <summary>
 /// ルームJoinログ

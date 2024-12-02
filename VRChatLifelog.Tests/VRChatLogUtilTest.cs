@@ -33,15 +33,16 @@ namespace VRChatLifelogTest
         }
 
         [Theory]
-        [InlineData("[Behaviour] OnPlayerLeft hoge (usr_7c61377d-df7c-4cbe-a486-c8caad0d22de)", "hoge")]
-        [InlineData("[Behaviour] OnPlayerLeft テスト用 (usr_dc868ae9-678a-4c4d-8a5d-e51611ba5c28)", "テスト用")]
-        public void Parse_Valid_PlayerLeftLog(string log, string playerName)
+        [InlineData("[Behaviour] OnPlayerLeft hoge (usr_7c61377d-df7c-4cbe-a486-c8caad0d22de)", "hoge", "usr_7c61377d-df7c-4cbe-a486-c8caad0d22de")]
+        [InlineData("[Behaviour] OnPlayerLeft テスト用 (usr_dc868ae9-678a-4c4d-8a5d-e51611ba5c28)", "テスト用", "usr_dc868ae9-678a-4c4d-8a5d-e51611ba5c28")]
+        public void Parse_Valid_PlayerLeftLog(string log, string playerName, string playerId)
         {
             var isSuccess = VRChatLogUtil.TryParsePlayerLeftLog(log, out var leftLog);
             Assert.True(isSuccess);
             Assert.NotNull(leftLog);
 
-            Assert.Equal(playerName, leftLog!.PlayerName);
+            Assert.Equal(playerName, leftLog.PlayerName);
+            Assert.Equal(playerId, leftLog.PlayerId);
         }
 
         [Theory]
