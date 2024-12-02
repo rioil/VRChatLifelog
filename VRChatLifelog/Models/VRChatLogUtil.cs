@@ -8,7 +8,7 @@ public static class VRChatLogUtil
 {
     private static readonly Regex PlayerJoinLogPattern = new("\\[Behaviour\\] Initialized PlayerAPI \"(?<player>.*)\" is (?<type>(remote)|(local))");
 
-    private static readonly Regex PlayerLeftLogPattern = new(@"\[Behaviour\] Unregistering (?<player>.*)");
+    private static readonly Regex PlayerLeftLogPattern = new(@"\[Behaviour\] OnPlayerLeft (?<player>.*) \((?<playerId>.*)\)");
 
     //lang=regex
     private static readonly Regex WorldJoinLogPattern = new(
