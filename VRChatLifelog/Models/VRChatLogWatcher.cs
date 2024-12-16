@@ -328,6 +328,7 @@ namespace VRChatLifelog.Models
                 .Where(h => h.LocationHistory.LogFileInfoId == _logFileInfoId)
                 .Where(h => h.Left == null)
                 .GroupBy(h => h.LocationHistory)
+                .ToArray()
                 .OrderBy(g => g.Key.Joined)
                 .ToArray();
 
