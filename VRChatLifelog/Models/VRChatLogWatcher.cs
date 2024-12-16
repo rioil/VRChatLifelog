@@ -223,6 +223,7 @@ namespace VRChatLifelog.Models
                 }
                 else if (!IsProcessRunning)
                 {
+                    RecoverCollapsedLog();
                     break;
                 }
                 else
@@ -313,31 +314,51 @@ namespace VRChatLifelog.Models
             }
         }
 
-        // ブルースクリーン等で異常終了した場合のための自動修復処理
-        // 退出時刻が記録されていない履歴があればファイルの最終更新日時を退出時刻として設定する
+        /// <summary>
+        /// 退出時刻が記録されていないロケーション履歴と入退出履歴を修復します．
+        /// </summary>
         private void RecoverCollapsedLog()
         {
             using var lifelogContext = new LifelogContext();
             var lastWriteTime = File.GetLastWriteTime(WatchingFileFullPath);
-            lifelogContext.JoinLeaveHistories.Where(h => h.Joined <= lastWriteTime && h.Left == null).ForEach(h => RecoverCollapsedJoinLeaveHistory(h));
-            lifelogContext.LocationHistories.Where(h => h.Joined <= lastWriteTime && h.Left == null).ForEach(h => RecoverCollapsedLocationHistory(h));
+
+            // 退出時刻が記録されていない入退出履歴を取得して，ロケーションでグループ化
+            var emptyLeftTimeLocations = lifelogContext.JoinLeaveHistories
+                .Include(h => h.LocationHistory)
+                .Where(h => h.LocationHistory.LogFileInfoId == _logFileInfoId)
+                .Where(h => h.Left == null)
+                .GroupBy(h => h.LocationHistory)
+                .OrderBy(g => g.Key.Joined)
+                .ToArray();
+
+            for (int i = 0; i < emptyLeftTimeLocations.Length; i++)
+            {
+                var locationGroup = emptyLeftTimeLocations[i];
+                var location = locationGroup.Key;
+
+                // 退出時刻が記録されていないロケーション履歴があれば，次のロケーションの入室時刻またはファイルの最終更新日時を退出時刻として設定する
+                if (location.Left is null)
+                {
+                    if (i + 1 < emptyLeftTimeLocations.Length)
+                    {
+                        location.Left = emptyLeftTimeLocations[i + 1].Key.Joined;
+                    }
+                    else
+                    {
+                        location.Left = lastWriteTime;
+                    }
+                    _logger.LogWarning("Recovered a collapsed location history (ID:{id}).", locationGroup.Key.Id);
+                }
+
+                // 退出時刻が記録されていない入退出履歴は，ロケーション履歴の退出時刻を入退出履歴の退出時刻として設定する
+                foreach (var history in locationGroup)
+                {
+                    history.Left = location.Left;
+                    _logger.LogWarning("Recovered a collapsed join/leave history (ID:{id}).", history.Id);
+                }
+            }
+
             lifelogContext.SaveChanges();
-
-            // 破損した入退出履歴を修復
-            void RecoverCollapsedJoinLeaveHistory(JoinLeaveHistory history)
-            {
-                history.Left = lastWriteTime;
-                lifelogContext.JoinLeaveHistories.Update(history);
-                _logger.LogWarning("Collapsed join/leave history (ID:{id}) was recovered.", history.Id);
-            }
-
-            // 破損したロケーション履歴を修復
-            void RecoverCollapsedLocationHistory(LocationHistory history)
-            {
-                history.Left = lastWriteTime;
-                lifelogContext.LocationHistories.Update(history);
-                _logger.LogWarning("Collapsed location history (ID:{id}) was recovered.", history.Id);
-            }
         }
 
         /// <summary>
