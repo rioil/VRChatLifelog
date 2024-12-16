@@ -55,8 +55,8 @@ namespace VRChatLifelog.Models
         /// <summary>
         /// VRChatのプロセスが実行中か
         /// </summary>
-        /// <remarks>VRChatのプロセスが取得できなかった場合は常に<see langword="true"/>を返します．</remarks>
-        public bool IsProcessRunning => (!_vrchatProcess?.HasExited) ?? true;
+        /// <remarks>VRChatのプロセスが取得できなかった場合は常に<see langword="false"/>を返します．</remarks>
+        public bool IsProcessRunning => (!_vrchatProcess?.HasExited) ?? false;
 
         /// <summary>
         /// 監視中のファイルのフルパス
