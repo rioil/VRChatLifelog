@@ -10,7 +10,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using VRChatLifelog.Data;
-using VRChatLifelog.Extensions;
 using VRChatLifelog.Utils;
 
 namespace VRChatLifelog.Models
