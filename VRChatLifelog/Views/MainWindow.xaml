@@ -169,8 +169,9 @@
                   <Button Margin="0,2,3,0" Padding="2"
                           Background="Transparent"
                           Command="{Binding DataContext.SelectUserNameCandidateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                          CommandParameter="{Binding}"
-                          Content="{Binding}" />
+                          CommandParameter="{Binding}">
+                    <TextBlock Text="{Binding}" />
+                  </Button>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
 
