@@ -10,13 +10,13 @@ namespace VRChatLifelogTest
         [InlineData("[Behaviour] Initialized PlayerAPI \"hoge\" is remote", "hoge", false)]
         [InlineData("[Behaviour] Initialized PlayerAPI \"fuga\" is remote", "fuga", false)]
         [InlineData("[Behaviour] Initialized PlayerAPI \"テスト\" is remote", "テスト", false)]
-        public void Parse_Valid_PlayerJoinLog(string log, string playerName, bool isLocal)
+        public void Parse_Valid_PlayerInitializedLog(string log, string playerName, bool isLocal)
         {
-            var isSuccess = VRChatLogUtil.TryParsePlayerJoinLog(log, out var joinLog);
+            var isSuccess = VRChatLogUtil.TryParsePlayerInitializedLog(log, out var joinLog);
             Assert.True(isSuccess);
             Assert.NotNull(joinLog);
 
-            Assert.Equal(playerName, joinLog!.PlayerName);
+            Assert.Equal(playerName, joinLog.PlayerName);
             Assert.Equal(isLocal, joinLog.IsLocal);
         }
 
@@ -25,6 +25,29 @@ namespace VRChatLifelogTest
         [InlineData("[Behaviour] OnPlayerJoined hoge")]
         [InlineData("[Behaviour] Initialized PlayerAPI")]
         [InlineData("[Behaviour] Initialized PlayerAPI \"テスト\" is super")]
+        public void Parse_Invalid_PlayerInitializedLog(string log)
+        {
+            var isSuccess = VRChatLogUtil.TryParsePlayerInitializedLog(log, out var joinLog);
+            Assert.False(isSuccess);
+            Assert.Null(joinLog);
+        }
+
+        [Theory]
+        [InlineData("[Behaviour] OnPlayerJoined hoge (usr_7c61377d-df7c-4cbe-a486-c8caad0d22de)", "hoge", "usr_7c61377d-df7c-4cbe-a486-c8caad0d22de")]
+        [InlineData("[Behaviour] OnPlayerJoined テスト用 (usr_dc868ae9-678a-4c4d-8a5d-e51611ba5c28)", "テスト用", "usr_dc868ae9-678a-4c4d-8a5d-e51611ba5c28")]
+        public void Parse_Valid_PlayerJoinLog(string log, string playerName, string playerId)
+        {
+            var isSuccess = VRChatLogUtil.TryParsePlayerJoinLog(log, out var joinLog);
+            Assert.True(isSuccess);
+            Assert.NotNull(joinLog);
+            Assert.Equal(playerName, joinLog.PlayerName);
+            Assert.Equal(playerId, joinLog.PlayerId);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("[Behaviour] OnPlayerJoined hoge")]
+        [InlineData("[Behaviour] Initialized PlayerAPI")]
         public void Parse_Invalid_PlayerJoinLog(string log)
         {
             var isSuccess = VRChatLogUtil.TryParsePlayerJoinLog(log, out var joinLog);
@@ -112,7 +135,7 @@ namespace VRChatLifelogTest
             Assert.True(isSuccess);
             Assert.NotNull(instance);
 
-            Assert.Equal(worldId, instance!.WorldId);
+            Assert.Equal(worldId, instance.WorldId);
             Assert.Equal(instanceId, instance.InstanceId);
             Assert.Equal(type, instance.Type);
             Assert.Equal(region, instance.Region);
@@ -139,7 +162,7 @@ namespace VRChatLifelogTest
             Assert.True(isSuccess);
             Assert.NotNull(room);
 
-            Assert.Equal(worldName, room!.WorldName);
+            Assert.Equal(worldName, room.WorldName);
         }
 
         [Theory]

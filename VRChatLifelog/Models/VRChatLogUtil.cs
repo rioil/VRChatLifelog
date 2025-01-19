@@ -4,23 +4,71 @@ using VRChatLifelog.Data;
 
 namespace VRChatLifelog.Models;
 
-public static class VRChatLogUtil
+public static partial class VRChatLogUtil
 {
-    private static readonly Regex PlayerJoinLogPattern = new("\\[Behaviour\\] Initialized PlayerAPI \"(?<player>.*)\" is (?<type>(remote)|(local))");
+    /// <summary>
+    /// プレイヤーJoinログの正規表現パターン
+    /// </summary>
+    [GeneratedRegex(@"\[Behaviour\] OnPlayerJoined (?<player>.*) \((?<playerId>.*)\)")]
+    private static partial Regex PlayerJoinLogPattern { get; }
 
-    private static readonly Regex PlayerLeftLogPattern = new(@"\[Behaviour\] OnPlayerLeft (?<player>.*) \((?<playerId>.*)\)");
+    /// <summary>
+    /// プレイヤーAPI初期化完了ログの正規表現パターン
+    /// </summary>
+    [GeneratedRegex(@"\[Behaviour\] Initialized PlayerAPI ""(?<player>.*)"" is (?<type>(remote)|(local))")]
+    private static partial Regex PlayerInitializedLogPattern { get; }
 
-    //lang=regex
-    private static readonly Regex WorldJoinLogPattern = new(
+    /// <summary>
+    /// プレイヤーLeftログの正規表現パターン
+    /// </summary>
+    [GeneratedRegex(@"\[Behaviour\] OnPlayerLeft (?<player>.*) \((?<playerId>.*)\)")]
+    private static partial Regex PlayerLeftLogPattern { get; }
+
+    /// <summary>
+    /// ワールドJoinログの正規表現パターン
+    /// </summary>
+    [GeneratedRegex(
         @"\[Behaviour\] Joining (?<worldId>wr?ld_[\da-fA-F]{8}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{12}):(?<instanceId>\w+)" +
         @"(~(?<type>[\w]+)\((?<master>((usr|grp)_[\da-fA-F]{8}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{4}\-[\da-fA-F]{12})|\w{10})\))?" +
         @"(?<canReqInvite>~canRequestInvite)?" +
         @"(~groupAccessType\((?<groupAccessType>[\w]+)\))?" +
         @"(~region\((?<region>[\w]+)\))?" +
-        @"(~nonce\((.+)\))?");
-    private static readonly Regex LocalTestWorldJoinLogPattern = new(@"\[Behaviour\] Joining local:(?<worldId>[a-f\d]+)");
+        @"(~nonce\((.+)\))?")]
+    private static partial Regex WorldJoinLogPattern { get; }
 
-    private static readonly Regex RoomJoinLogPattern = new(@"\[Behaviour\] Joining or Creating Room: (?<name>.*)");
+    /// <summary>
+    /// ローカルテストワールドJoinログの正規表現パターン
+    /// </summary>
+    [GeneratedRegex(@"\[Behaviour\] Joining local:(?<worldId>[a-f\d]+)")]
+    private static partial Regex LocalTestWorldJoinLogPattern { get; }
+
+    /// <summary>
+    /// ルームJoinログの正規表現パターン
+    /// </summary>
+    [GeneratedRegex(@"\[Behaviour\] Joining or Creating Room: (?<name>.*)")]
+    private static partial Regex RoomJoinLogPattern { get; }
+
+    /// <summary>
+    /// プレイヤーAPI初期化ログを解析します．
+    /// </summary>
+    /// <param name="log">ログ文字列</param>
+    /// <param name="initializedLog">解析したプレイヤーAPI初期化ログ</param>
+    /// <returns>解析に成功すればtrue，解析に失敗すればfalse</returns>
+    public static bool TryParsePlayerInitializedLog(string log, [NotNullWhen(true)] out PlayerInitializedLog? initializedLog)
+    {
+        var match = PlayerInitializedLogPattern.Match(log);
+        if (!match.Success)
+        {
+            initializedLog = null;
+            return false;
+        }
+
+        var playerName = match.Groups["player"].Value;
+        var isLocal = match.Groups["type"].Value == "local";
+
+        initializedLog = new PlayerInitializedLog(playerName, isLocal);
+        return true;
+    }
 
     /// <summary>
     /// プレイヤーJoinログを解析します．
@@ -38,9 +86,9 @@ public static class VRChatLogUtil
         }
 
         var playerName = match.Groups["player"].Value;
-        var isLocal = match.Groups["type"].Value == "local";
+        var playerId = match.Groups["playerId"].Value;
 
-        joinLog = new PlayerJoinLog(playerName, isLocal);
+        joinLog = new PlayerJoinLog(playerName, playerId);
         return true;
     }
 
@@ -151,13 +199,20 @@ public static class VRChatLogUtil
 /// </summary>
 /// <param name="PlayerName">プレイヤー名</param>
 /// <param name="IsLocal">ローカルプレイヤーであればtrue，リモートプレイヤーであればfalse</param>
-public record PlayerJoinLog(string PlayerName, bool IsLocal);
+public record PlayerInitializedLog(string PlayerName, bool IsLocal);
+
+/// <summary>
+/// プレイヤーJoinログ
+/// </summary>
+/// <param name="PlayerName">プレイヤー名</param>
+/// <param name="PlayerId">プレイヤーID</param>
+public record PlayerJoinLog(string PlayerName, string PlayerId);
 
 /// <summary>
 /// プレイヤーLeftログ
 /// </summary>
 /// <param name="PlayerName">プレイヤー名</param>
-/// <param name="PlayerId"プレイヤーID</param>
+/// <param name="PlayerId">プレイヤーID</param>
 public record PlayerLeftLog(string PlayerName, string PlayerId);
 
 /// <summary>

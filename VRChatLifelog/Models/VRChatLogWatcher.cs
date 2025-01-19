@@ -251,15 +251,15 @@ namespace VRChatLifelog.Models
         {
             using var dbContext = new LifelogContext();
 
-            // プレイヤーjoinログ
-            if (VRChatLogUtil.TryParsePlayerJoinLog(item.Content, out var joinLog))
+            // プレイヤーAPI初期化ログ（プレイヤー名，Localかどうかを取得）
+            if (VRChatLogUtil.TryParsePlayerInitializedLog(item.Content, out var initializedLog))
             {
                 ThrowInvalidOperationExceptionIfNull(_currentLocation);
 
-                var joinLeaveHistory = dbContext.JoinLeaveHistories.Where(h => h.LocationHistory.Id == _currentLocation.Id && h.PlayerName == joinLog.PlayerName && h.Joined == item.Time);
+                var joinLeaveHistory = dbContext.JoinLeaveHistories.Where(h => h.LocationHistory.Id == _currentLocation.Id && h.PlayerName == initializedLog.PlayerName && h.Joined == item.Time);
                 if (!joinLeaveHistory.Any())
                 {
-                    dbContext.JoinLeaveHistories.Add(new JoinLeaveHistory(joinLog.PlayerName, item.Time, joinLog.IsLocal, _currentLocation));
+                    dbContext.JoinLeaveHistories.Add(new JoinLeaveHistory(initializedLog.PlayerName, item.Time, initializedLog.IsLocal, _currentLocation));
                     dbContext.SaveChanges();
                 }
             }
