@@ -425,7 +425,7 @@
             <DataGridTemplateColumn Header="Name">
               <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate DataType="{x:Type data:JoinLeaveHistory}">
-                  <TextBlock Margin="5,0" Text="{Binding PlayerName}" />
+                  <TextBlock Margin="5,0" Text="{Binding PlayerName}" ToolTip="{Binding PlayerId}"/>
                 </DataTemplate>
               </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>
