@@ -251,15 +251,33 @@ namespace VRChatLifelog.Models
         {
             using var dbContext = new LifelogContext();
 
-            // プレイヤーjoinログ
+            // プレイヤーjoinログ（プレイヤー名，プレイヤーID取得）
             if (VRChatLogUtil.TryParsePlayerJoinLog(item.Content, out var joinLog))
             {
                 ThrowInvalidOperationExceptionIfNull(_currentLocation);
 
-                var joinLeaveHistory = dbContext.JoinLeaveHistories.Where(h => h.LocationHistory.Id == _currentLocation.Id && h.PlayerName == joinLog.PlayerName && h.Joined == item.Time);
+                var joinLeaveHistory = dbContext.JoinLeaveHistories
+                    .Where(h => h.LocationHistory.Id == _currentLocation.Id && h.PlayerName == joinLog.PlayerName && h.Joined == item.Time);
                 if (!joinLeaveHistory.Any())
                 {
-                    dbContext.JoinLeaveHistories.Add(new JoinLeaveHistory(joinLog.PlayerName, item.Time, joinLog.IsLocal, _currentLocation));
+                    var @new = new JoinLeaveHistory(joinLog.PlayerName, joinLog.PlayerId, item.Time, false, _currentLocation);
+                    dbContext.JoinLeaveHistories.Add(@new);
+                    dbContext.SaveChanges();
+                }
+            }
+            // プレイヤーAPI初期化ログ（Localかどうかを取得）
+            else if (VRChatLogUtil.TryParsePlayerInitializedLog(item.Content, out var initializedLog))
+            {
+                ThrowInvalidOperationExceptionIfNull(_currentLocation);
+
+                var joinLeaveHistory = dbContext.JoinLeaveHistories
+                    .Where(h => h.LocationHistory.Id == _currentLocation.Id && h.PlayerName == initializedLog.PlayerName)
+                    .OrderBy(h => h.Joined)
+                    .FirstOrDefault();
+                if (joinLeaveHistory is not null)
+                {
+                    joinLeaveHistory.IsLocal = initializedLog.IsLocal;
+                    dbContext.JoinLeaveHistories.Update(joinLeaveHistory);
                     dbContext.SaveChanges();
                 }
             }
