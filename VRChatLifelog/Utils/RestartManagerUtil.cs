@@ -34,17 +34,14 @@ namespace VRChatLifelog.Utils
 
         private unsafe static uint RmStartSession()
         {
-            var key = Guid.NewGuid().ToString();
-            fixed (char* pKey = key)
+            var key = Guid.NewGuid().ToString().ToCharArray();
+            var res = PInvoke.RmStartSession(out var handle, key);
+            if (res != 0)
             {
-                var res = PInvoke.RmStartSession(out var handle, new PWSTR(pKey));
-                if (res != 0)
-                {
-                    throw new InvalidOperationException("Failed to start session");
-                }
-
-                return handle;
+                throw new InvalidOperationException("Failed to start session");
             }
+
+            return handle;
         }
 
         private unsafe static void RmRegisterResource(uint handle, string filename)
