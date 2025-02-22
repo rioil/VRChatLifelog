@@ -169,8 +169,6 @@ namespace VRChatLifelog.Models
 
         private async Task ReadAsync(StreamReader reader, CancellationToken cancellationToken)
         {
-            var buffer = new List<string>();
-
             DateTime? lastRead = null;
             using (var dbContext = new LifelogContext())
             {
@@ -203,17 +201,11 @@ namespace VRChatLifelog.Models
                 {
                     lastRead = DateTime.Now;
                     var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
-                    if (string.IsNullOrEmpty(line))
+
+                    // TODO: 複数行にまたがるログへの対応
+                    if (LogItem.TryParse(line, out var item))
                     {
-                        if (LogItem.TryParse([.. buffer], out var item))
-                        {
-                            AddLogItem(item);
-                        }
-                        buffer.Clear();
-                    }
-                    else
-                    {
-                        buffer.Add(line);
+                        AddLogItem(item);
                     }
                 }
                 else if (cancellationToken.IsCancellationRequested)

@@ -1,64 +1,65 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace VRChatLifelog.Data
 {
-    internal class LogItem
+    /// <summary>
+    /// ログの項目
+    /// </summary>
+    /// <param name="Time">日時</param>
+    /// <param name="LogLevel">ログレベル</param>
+    /// <param name="Content">内容</param>
+    public partial record LogItem(DateTime Time, ELogLevel LogLevel, string Content)
     {
-        public LogItem(DateTime time, ELogLevel logLevel, string content)
+        /// <summary>
+        /// ログのヘッダーの正規表現パターン
+        /// </summary>
+        [GeneratedRegex(@"(?<time>\d{4}.\d{2}.\d{2} \d{2}:\d{2}:\d{2}) (?<logLevel>[^-]*)\s*-\s*(?<content>.*)")]
+        public static partial Regex HeaderPattern { get; }
+
+        /// <summary>
+        /// ログを解析します．
+        /// </summary>
+        /// <param name="log">ログ文字列</param>
+        /// <param name="item">ログ項目</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static bool TryParse(string? log, [NotNullWhen(true)] out LogItem? item)
         {
-            Time = time;
-            LogLevel = logLevel;
-            Content = content;
-        }
-
-        public DateTime Time { get; }
-        public ELogLevel LogLevel { get; }
-        public string Content { get; }
-
-
-        public static bool TryParse(IEnumerable<string> logLines, [NotNullWhen(true)] out LogItem? header)
-        {
-            //lang=regex
-            const string HeaderPattern = @"(?<time>\d{4}.\d{2}.\d{2} \d{2}:\d{2}:\d{2}) (?<logLevel>[^-]*)\s*-\s*(?<content>.*)";
-
-            if (!logLines.Any())
+            if (log is null)
             {
-                header = null;
+                item = null;
                 return false;
             }
 
-            var match = Regex.Match(logLines.First(), HeaderPattern);
-            if (match.Success)
+            var match = HeaderPattern.Match(log);
+            if (!match.Success)
             {
-                if (!DateTime.TryParse(match.Groups["time"].Value, out var time))
-                {
-                    throw new ArgumentException("invalid time", nameof(logLines));
-                }
-
-                if (!Enum.TryParse<ELogLevel>(match.Groups["logLevel"].Value, out var logLevel))
-                {
-                    logLevel = ELogLevel.Unknown;
-                }
-
-                var content = match.Groups["content"].Value;
-
-                header = new(time, logLevel, content);
-                return true;
-            }
-            else
-            {
-                header = null;
+                item = null;
                 return false;
             }
+
+            if (!DateTime.TryParse(match.Groups["time"].ValueSpan, out var time))
+            {
+                throw new ArgumentException("invalid time", nameof(log));
+            }
+
+            if (!Enum.TryParse<ELogLevel>(match.Groups["logLevel"].ValueSpan, out var logLevel))
+            {
+                logLevel = ELogLevel.Unknown;
+            }
+
+            var content = match.Groups["content"].Value;
+
+            item = new(time, logLevel, content);
+            return true;
         }
     }
 
-    internal enum ELogLevel
+    public enum ELogLevel
     {
+        Debug,
         Log,
         Warning,
         Error,
