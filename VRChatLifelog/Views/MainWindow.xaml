@@ -471,9 +471,9 @@
         <TextBlock>
           <TextBlock.Style>
             <Style TargetType="TextBlock">
-              <Setter Property="Text" Value="{Binding DataContext.WatchingFileCount, RelativeSource={RelativeSource AncestorType=Window}, StringFormat={}{0} 個のログファイルを監視中}" />
+              <Setter Property="Text" Value="{Binding DataContext.WatchingFileCount.Value, RelativeSource={RelativeSource AncestorType=Window}, StringFormat={}{0} 個のログファイルを監視中}" />
               <Style.Triggers>
-                <DataTrigger Binding="{Binding DataContext.WatchingFileCount, RelativeSource={RelativeSource AncestorType=Window}}" Value="0">
+                <DataTrigger Binding="{Binding DataContext.WatchingFileCount.Value, RelativeSource={RelativeSource AncestorType=Window}}" Value="0">
                   <Setter Property="Text" Value="" />
                 </DataTrigger>
               </Style.Triggers>
