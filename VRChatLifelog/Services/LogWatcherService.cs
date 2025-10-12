@@ -1,15 +1,14 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Reactive.Bindings;
 using Reactive.Bindings.Extensions;
 using VRChatLifelog.Extensions;
@@ -187,17 +186,26 @@ namespace VRChatLifelog.Services
             }
         }
 
-        private void StartReadingFile(string filePath)
+        private async void StartReadingFile(string filePath)
         {
             try
             {
-                var logFile = new VRChatLogWatcher(filePath, _serviceProvider.GetRequiredService<ILogger<VRChatLogWatcher>>());
+                var logFile = new VRChatLogWatcher(filePath,
+                    _serviceProvider.GetRequiredService<ILogger<VRChatLogWatcher>>());
                 logFile.StartReading();
+                
                 _watchingFiles.Add(logFile);
+
+                await logFile.WaitForCompletionAsync();
+                _watchingFiles.Remove(logFile);
             }
             catch (FileNotFoundException ex)
             {
                 _logger.LogWarning("Log file not found : {filePath}", ex.FileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while reading log file");
             }
         }
         #endregion private method

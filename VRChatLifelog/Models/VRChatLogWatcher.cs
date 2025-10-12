@@ -1,7 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -9,6 +6,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using VRChatLifelog.Data;
 using VRChatLifelog.Utils;
 
@@ -90,6 +89,7 @@ namespace VRChatLifelog.Models
                 dbContext.LogFiles.Add(fileInfo);
                 dbContext.SaveChanges();
             }
+
             _logFileInfoId = fileInfo.Id;
 
             _vrchatProcess = GetVRChatProcess();
@@ -100,7 +100,8 @@ namespace VRChatLifelog.Models
         /// </summary>
         public void StartReading()
         {
-            if (_watchTask is not null) { return; }
+            if (_watchTask is not null) return;
+
             _watchTaskTcs = new CancellationTokenSource();
             _watchTask = RunWatchTask(_watchTaskTcs.Token);
         }
@@ -111,14 +112,37 @@ namespace VRChatLifelog.Models
         /// <returns></returns>
         public async Task StopReadingAsync()
         {
-            if (_watchTask is null) { return; }
+            if (_watchTask is null) return;
+
             _logger.LogInformation("Stopping reading {fileName}", WatchingFileFullPath);
             _watchTaskTcs?.Cancel();
             try
             {
                 await _watchTask.ConfigureAwait(false);
             }
-            catch (Exception ex) when (ex is OperationCanceledException || ex is TaskCanceledException) { }
+            catch (Exception ex) when (ex is OperationCanceledException || ex is TaskCanceledException)
+            {
+            }
+        }
+
+        /// <summary>
+        /// ファイルの読み取りが完了するまで待機します．
+        /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
+        public async Task WaitForCompletionAsync()
+        {
+            if (_watchTask is null)
+            {
+                throw new InvalidOperationException();
+            }
+
+            try
+            {
+                await _watchTask.ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is OperationCanceledException or TaskCanceledException)
+            {
+            }
         }
 
         /// <summary>
@@ -132,7 +156,8 @@ namespace VRChatLifelog.Models
         {
             try
             {
-                using var reader = await OpenLogFileAsync(WatchingFileFullPath, cancellationToken: cancellationToken).ConfigureAwait(false);
+                using var reader = await OpenLogFileAsync(WatchingFileFullPath, cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
                 await ReadAsync(reader, cancellationToken).ConfigureAwait(false);
             }
             catch (FileNotFoundException ex)
@@ -147,19 +172,22 @@ namespace VRChatLifelog.Models
         /// <param name="path">ログファイルのパス</param>
         /// <param name="maxRetry">リトライ回数</param>
         /// <param name="retryIntervalMs">リトライ間隔(ms)</param>
+        /// <param name="cancellationToken">キャンセルトークン</param>
         /// <returns>ログファイルの<see cref="StreamReader"/></returns>
-        private static async Task<StreamReader> OpenLogFileAsync(string path, int maxRetry = 5, int retryIntervalMs = 500, CancellationToken cancellationToken = default)
+        private static async Task<StreamReader> OpenLogFileAsync(string path, int maxRetry = 5,
+            int retryIntervalMs = 500, CancellationToken cancellationToken = default)
         {
-            int retryCount = 0;
+            var retryCount = 0;
             while (true)
             {
                 try
                 {
-                    return new StreamReader(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete));
+                    return new StreamReader(new FileStream(path, FileMode.Open, FileAccess.Read,
+                        FileShare.ReadWrite | FileShare.Delete));
                 }
                 catch (FileNotFoundException)
                 {
-                    if (retryCount >= maxRetry) { throw; }
+                    if (retryCount >= maxRetry) throw;
                     retryCount++;
                 }
 
@@ -181,16 +209,18 @@ namespace VRChatLifelog.Models
                     reader.BaseStream.Seek(currentFileLength, SeekOrigin.Begin);
 
                     // 最後の履歴からロケーションとインスタンス情報を初期化
-                    var lastLocation = dbContext.LocationHistories.OrderBy(l => l.Joined)
-                                                                  .LastOrDefault(l => l.LogFileInfo == logFileInfo);
+                    var lastLocation = dbContext.LocationHistories
+                        .OrderBy(l => l.Joined)
+                        .LastOrDefault(l => l.LogFileInfo == logFileInfo);
                     if (lastLocation is not null)
                     {
                         _currentLocation = lastLocation;
-                        _currentInstance = new Instance(lastLocation.WorldId,
-                                                        lastLocation.InstanceId,
-                                                        lastLocation.Type,
-                                                        lastLocation.Region,
-                                                        lastLocation.MasterId);
+                        _currentInstance = new Instance(
+                            lastLocation.WorldId,
+                            lastLocation.InstanceId,
+                            lastLocation.Type,
+                            lastLocation.Region,
+                            lastLocation.MasterId);
                     }
                 }
             }
@@ -223,7 +253,9 @@ namespace VRChatLifelog.Models
                     {
                         await Task.Delay(1000, cancellationToken).ConfigureAwait(false);
                     }
-                    catch (TaskCanceledException) { }
+                    catch (TaskCanceledException)
+                    {
+                    }
                 }
             }
 
@@ -231,12 +263,13 @@ namespace VRChatLifelog.Models
             {
                 var fileInfoId = dbContext.LogFiles.Single(x => x.Id == _logFileInfoId);
                 fileInfoId.LastRead = lastRead;
-                await dbContext.SaveChangesAsync(CancellationToken.None).ConfigureAwait(false);     // MEMO:最終読み取り時刻の保存はキャンセルしないのでキャンセルトークンは伝播させない
+                await dbContext.SaveChangesAsync(CancellationToken.None)
+                    .ConfigureAwait(false); // MEMO:最終読み取り時刻の保存はキャンセルしないのでキャンセルトークンは伝播させない
             }
         }
 
         /// <summary>
-        /// ログ項目をDBの対応するテーブルに保存します．
+        /// ログ項目をDBを軽蔑するテーブルに保存します．
         /// </summary>
         /// <param name="item">ログ項目</param>
         private void AddLogItem(LogItem item)
@@ -249,13 +282,13 @@ namespace VRChatLifelog.Models
                 ThrowInvalidOperationExceptionIfNull(_currentLocation);
 
                 var joinLeaveHistory = dbContext.JoinLeaveHistories
-                    .Where(h => h.LocationHistory.Id == _currentLocation.Id && h.PlayerName == joinLog.PlayerName && h.Joined == item.Time);
-                if (!joinLeaveHistory.Any())
-                {
-                    var @new = new JoinLeaveHistory(joinLog.PlayerName, joinLog.PlayerId, item.Time, false, _currentLocation);
-                    dbContext.JoinLeaveHistories.Add(@new);
-                    dbContext.SaveChanges();
-                }
+                    .Where(h => h.LocationHistory.Id == _currentLocation.Id && h.PlayerName == joinLog.PlayerName &&
+                                h.Joined == item.Time);
+                if (joinLeaveHistory.Any()) return;
+                var @new = new JoinLeaveHistory(joinLog.PlayerName, joinLog.PlayerId, item.Time, false,
+                    _currentLocation);
+                dbContext.JoinLeaveHistories.Add(@new);
+                dbContext.SaveChanges();
             }
             // プレイヤーAPI初期化ログ（Localかどうかを取得）
             else if (VRChatLogUtil.TryParsePlayerInitializedLog(item.Content, out var initializedLog))
@@ -263,15 +296,14 @@ namespace VRChatLifelog.Models
                 ThrowInvalidOperationExceptionIfNull(_currentLocation);
 
                 var joinLeaveHistory = dbContext.JoinLeaveHistories
-                    .Where(h => h.LocationHistory.Id == _currentLocation.Id && h.PlayerName == initializedLog.PlayerName)
+                    .Where(h => h.LocationHistory.Id == _currentLocation.Id &&
+                                h.PlayerName == initializedLog.PlayerName)
                     .OrderBy(h => h.Joined)
                     .FirstOrDefault();
-                if (joinLeaveHistory is not null)
-                {
-                    joinLeaveHistory.IsLocal = initializedLog.IsLocal;
-                    dbContext.JoinLeaveHistories.Update(joinLeaveHistory);
-                    dbContext.SaveChanges();
-                }
+                if (joinLeaveHistory is null) return;
+                joinLeaveHistory.IsLocal = initializedLog.IsLocal;
+                dbContext.JoinLeaveHistories.Update(joinLeaveHistory);
+                dbContext.SaveChanges();
             }
             // プレイヤーleaveログ
             else if (VRChatLogUtil.TryParsePlayerLeftLog(item.Content, out var leftLog))
@@ -281,8 +313,16 @@ namespace VRChatLifelog.Models
                 // MEMO:ローカルテスト時は同名のプレイヤーが複数人存在することになるためSingleOrDefaultではなく，FirstOrDefaultを用いる
                 var history = dbContext.JoinLeaveHistories
                     .Include(h => h.LocationHistory)
-                    .FirstOrDefault(h => h.LocationHistoryId == _currentLocation.Id && h.PlayerName == leftLog.PlayerName && h.Joined <= item.Time && h.Left == null);
-                if (history is null) { return; }   // TODO 見つからないのは正常ではないのでログ出力等の対応が必要
+                    .FirstOrDefault(h =>
+                        h.LocationHistoryId == _currentLocation.Id && h.PlayerName == leftLog.PlayerName &&
+                        h.Joined <= item.Time && h.Left == null);
+                if (history is null)
+                {
+                    _logger.LogWarning(
+                        "Could not find join/leave history for player '{playerName}' who left at {leftTime}.",
+                        leftLog.PlayerName, item.Time);
+                    return;
+                }
 
                 history.Left = item.Time;
                 dbContext.JoinLeaveHistories.Update(history);
@@ -308,7 +348,8 @@ namespace VRChatLifelog.Models
                 _currentInstance.WorldName = roomJoinLog.WorldName;
 
                 // ワールドjoinログ -> ルームjoinログの順に出力されるため，ルームjoinログを読み込んだ時点で新しいロケーションを作成
-                var locationHistory = dbContext.LocationHistories.Where(h => h.WorldId == _currentInstance.WorldId && h.Joined == item.Time).FirstOrDefault();
+                var locationHistory = dbContext.LocationHistories
+                    .Where(h => h.WorldId == _currentInstance.WorldId && h.Joined == item.Time).FirstOrDefault();
                 if (locationHistory is null)
                 {
                     var logFileInfo = dbContext.LogFiles.First(x => x.Id == _logFileInfoId);
@@ -357,6 +398,7 @@ namespace VRChatLifelog.Models
                     {
                         location.Left = lastWriteTime;
                     }
+
                     _logger.LogWarning("Recovered a collapsed location history (ID:{id}).", locationGroup.Key.Id);
                 }
 
@@ -388,7 +430,10 @@ namespace VRChatLifelog.Models
         /// <param name="value">値</param>
         /// <param name="name">値の式文字列</param>
         /// <exception cref="InvalidOperationException"></exception>
-        private static void ThrowInvalidOperationExceptionIfNull<T>([NotNull] T? value, [CallerArgumentExpression(nameof(value))] string? name = null)
+        private static void ThrowInvalidOperationExceptionIfNull<T>(
+            [NotNull] T? value,
+            [CallerArgumentExpression(nameof(value))]
+            string? name = null)
         {
             if (value is null)
             {
