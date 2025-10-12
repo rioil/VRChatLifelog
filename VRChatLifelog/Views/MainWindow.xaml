@@ -1,11 +1,10 @@
 ﻿<Window x:Class="VRChatLifelog.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:PresentationOptions="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+        xmlns:presentationOptions="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
         xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:controls="clr-namespace:VRChatLifelog.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:data="clr-namespace:VRChatLifelog.Data"
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         xmlns:l="http://schemas.livet-mvvm.net/2011/wpf"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -361,7 +360,7 @@
                                             <MenuItem.Icon>
                                                 <Image>
                                                     <Image.Source>
-                                                        <DrawingImage PresentationOptions:Freeze="True">
+                                                        <DrawingImage presentationOptions:Freeze="True">
                                                             <DrawingImage.Drawing>
                                                                 <DrawingGroup>
                                                                     <ImageDrawing
@@ -403,66 +402,13 @@
                     </ListView.ItemContainerStyle>
                 </ListView>
 
-                <GridSplitter Grid.RowSpan="2" Grid.Column="1"
+                <GridSplitter Grid.Column="1"
                               Width="5" Margin="3,0"
                               HorizontalAlignment="Center"
                               VerticalAlignment="Stretch" />
 
                 <!--  滞在プレイヤー履歴情報  -->
-                <DataGrid Grid.Row="1" Grid.Column="2"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          ItemsSource="{Binding JoinLeaveHistories.Value}"
-                          SelectedItem="{Binding SelectedJoinLeaveHistory.Value}"
-                          SelectionMode="Single">
-                    <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="Name">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate DataType="{x:Type data:JoinLeaveHistory}">
-                                    <TextBlock Margin="5,0" Text="{Binding PlayerName}" ToolTip="{Binding PlayerId}" />
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        <DataGridTextColumn Binding="{Binding Joined, StringFormat=yyyy/MM/dd HH:mm:ss}"
-                                            Header="Joined" />
-                        <DataGridTextColumn Binding="{Binding Left, StringFormat=yyyy/MM/dd HH:mm:ss}" Header="Left" />
-                    </DataGrid.Columns>
-                    <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow">
-                            <Setter Property="Tag"
-                                    Value="{Binding DataContext.SelectUserNameCandidateCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                            <Setter Property="ContextMenu">
-                                <Setter.Value>
-                                    <ContextMenu>
-                                        <MenuItem
-                                            Command="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                            CommandParameter="{Binding PlayerName}"
-                                            Header="このユーザーで絞り込み">
-                                            <MenuItem.Icon>
-                                                <Image>
-                                                    <Image.Source>
-                                                        <DrawingImage PresentationOptions:Freeze="True">
-                                                            <DrawingImage.Drawing>
-                                                                <DrawingGroup>
-                                                                    <ImageDrawing
-                                                                        ImageSource="{iconPacks:CooliconsImage Kind=Filter}"
-                                                                        Rect="0 0 12 12" />
-                                                                    <ImageDrawing
-                                                                        ImageSource="{iconPacks:CooliconsImage Kind=User01}"
-                                                                        Rect="8 7 8 9" />
-                                                                </DrawingGroup>
-                                                            </DrawingImage.Drawing>
-                                                        </DrawingImage>
-                                                    </Image.Source>
-                                                </Image>
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                    </ContextMenu>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </DataGrid.RowStyle>
-                </DataGrid>
+                <controls:JoinLeaveTimeline Grid.Column="2" ItemsSource="{Binding JoinLeaveHistories.Value}" />
             </Grid>
         </Grid>
 

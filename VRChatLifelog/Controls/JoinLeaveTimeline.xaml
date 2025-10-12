@@ -1,0 +1,155 @@
+﻿<UserControl x:Class="VRChatLifelog.Controls.JoinLeaveTimeline"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:presentationOptions="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+             xmlns:data="clr-namespace:VRChatLifelog.Data"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:controls="clr-namespace:VRChatLifelog.Controls"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.Resources>
+        <Style x:Key="EventBorderStyle" TargetType="Border" d:DataContext="{d:DesignInstance controls:TimelineEvent}">
+            <!-- 常に適用 -->
+            <Setter Property="Width" Value="5" />
+            <Setter Property="DockPanel.Dock" Value="Left" />
+
+            <!-- 状態に応じて切り替え -->
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="Margin" Value="0,0,5,0" />
+            <Setter Property="Opacity" Value="1" />
+
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding TimelineDisplayType}"
+                             Value="{x:Static controls:ETimelineDisplayType.ExcludedBefore}">
+                    <Setter Property="CornerRadius" Value="2" />
+                    <Setter Property="Margin" Value="0,0,5,8" />
+                    <Setter Property="Opacity" Value="0.4" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding TimelineDisplayType}"
+                             Value="{x:Static controls:ETimelineDisplayType.ExcludedAfter}">
+                    <Setter Property="CornerRadius" Value="2" />
+                    <Setter Property="Margin" Value="0,8,5,0" />
+                    <Setter Property="Opacity" Value="0.4" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="PlayerNameButtonStyle" TargetType="Button"
+               d:DataContext="{d:DesignInstance controls:TimelineEvent}">
+            <Setter Property="Content" Value="{Binding History.PlayerName}" />
+            <Setter Property="Tag" Value="{Binding}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <EventSetter Event="Click" Handler="OnTimelineEventSelected" />
+        </Style>
+    </UserControl.Resources>
+
+    <ItemsControl x:Name="TimelineItems">
+        <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type controls:TimelineItem}">
+                <DockPanel HorizontalAlignment="Stretch">
+                    <TextBlock DockPanel.Dock="Left" Text="{Binding FormattedTime}" Margin="0,0,5,0" Width="110"
+                               TextAlignment="Right" />
+                    <StackPanel HorizontalAlignment="Stretch">
+                        <!-- Join -->
+                        <ItemsControl ItemsSource="{Binding JoinEvents}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel>
+                                        <Border Background="MediumSeaGreen"
+                                                Style="{StaticResource EventBorderStyle}" />
+                                        <Button Style="{StaticResource PlayerNameButtonStyle}" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <!-- Leave -->
+                        <ItemsControl ItemsSource="{Binding LeaveEvents}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel>
+                                        <Border Background="IndianRed"
+                                                Style="{StaticResource EventBorderStyle}" />
+                                        <Button Style="{StaticResource PlayerNameButtonStyle}" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </DockPanel>
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+
+        <ItemsControl.Template>
+            <ControlTemplate TargetType="ItemsControl">
+                <ScrollViewer>
+                    <ItemsPresenter />
+                </ScrollViewer>
+            </ControlTemplate>
+        </ItemsControl.Template>
+
+        <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+                <VirtualizingStackPanel />
+            </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+    </ItemsControl>
+
+    <!-- <DataGrid Visibility="Collapsed" -->
+    <!--           AutoGenerateColumns="False" -->
+    <!--           IsReadOnly="True" -->
+    <!--           ItemsSource="{Binding JoinLeaveHistories.Value}" -->
+    <!--           SelectedItem="{Binding SelectedJoinLeaveHistory.Value}" -->
+    <!--           SelectionMode="Single"> -->
+    <!--     <DataGrid.Columns> -->
+    <!--         <DataGridTemplateColumn Header="Name"> -->
+    <!--             <DataGridTemplateColumn.CellTemplate> -->
+    <!--                 <DataTemplate DataType="{x:Type data:JoinLeaveHistory}"> -->
+    <!--                     <TextBlock Margin="5,0" Text="{Binding PlayerName}" ToolTip="{Binding PlayerId}" /> -->
+    <!--                 </DataTemplate> -->
+    <!--             </DataGridTemplateColumn.CellTemplate> -->
+    <!--         </DataGridTemplateColumn> -->
+    <!--         <DataGridTextColumn Binding="{Binding JoinEvents, StringFormat=yyyy/MM/dd HH:mm:ss}" -->
+    <!--                             Header="Joined" /> -->
+    <!--         <DataGridTextColumn Binding="{Binding LeaveEvents, StringFormat=yyyy/MM/dd HH:mm:ss}" Header="Left" /> -->
+    <!--     </DataGrid.Columns> -->
+    <!--     <DataGrid.RowStyle> -->
+    <!--         <Style TargetType="DataGridRow"> -->
+    <!--             <Setter Property="Tag" -->
+    <!--                     Value="{Binding DataContext.SelectUserNameCandidateCommand, RelativeSource={RelativeSource AncestorType=Window}}" /> -->
+    <!--             <Setter Property="ContextMenu"> -->
+    <!--                 <Setter.Value> -->
+    <!--                     <ContextMenu> -->
+    <!--                         <MenuItem -->
+    <!--                             Command="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource AncestorType=ContextMenu}}" -->
+    <!--                             CommandParameter="{Binding PlayerName}" -->
+    <!--                             Header="このユーザーで絞り込み"> -->
+    <!--                             <MenuItem.Icon> -->
+    <!--                                 <Image> -->
+    <!--                                     <Image.Source> -->
+    <!--                                         <DrawingImage presentationOptions:Freeze="True"> -->
+    <!--                                             <DrawingImage.Drawing> -->
+    <!--                                                 <DrawingGroup> -->
+    <!--                                                     <ImageDrawing -->
+    <!--                                                         ImageSource="{iconPacks:CooliconsImage Kind=Filter}" -->
+    <!--                                                         Rect="0 0 12 12" /> -->
+    <!--                                                     <ImageDrawing -->
+    <!--                                                         ImageSource="{iconPacks:CooliconsImage Kind=User01}" -->
+    <!--                                                         Rect="8 7 8 9" /> -->
+    <!--                                                 </DrawingGroup> -->
+    <!--                                             </DrawingImage.Drawing> -->
+    <!--                                         </DrawingImage> -->
+    <!--                                     </Image.Source> -->
+    <!--                                 </Image> -->
+    <!--                             </MenuItem.Icon> -->
+    <!--                         </MenuItem> -->
+    <!--                     </ContextMenu> -->
+    <!--                 </Setter.Value> -->
+    <!--             </Setter> -->
+    <!--         </Style> -->
+    <!--     </DataGrid.RowStyle> -->
+    <!-- </DataGrid> -->
+</UserControl>
