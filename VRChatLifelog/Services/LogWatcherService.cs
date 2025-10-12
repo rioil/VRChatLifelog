@@ -1,14 +1,16 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Reactive.Bindings;
+using Reactive.Bindings.Extensions;
 using VRChatLifelog.Extensions;
 using VRChatLifelog.Models;
 
@@ -59,17 +61,15 @@ namespace VRChatLifelog.Services
         /// <summary>
         /// 監視中のログファイル
         /// </summary>
-        private readonly List<VRChatLogWatcher> _watchingFiles = new(1);
-
-        /// <summary>
-        /// 監視対象ファイル数変更時に発生するイベント
-        /// </summary>
-        public event WatchingFileCountChangedEventHandler? WatchingFileCountChanged;
+        private readonly ObservableCollection<VRChatLogWatcher> _watchingFiles = [];
 
         /// <summary>
         /// 監視中のログファイルの数
         /// </summary>
-        public int WatchingFileCount => _watchingFiles.Count;
+        public ReadOnlyReactivePropertySlim<int> WatchingFileCount => _watchingFiles
+            .ObserveProperty(list => list.Count)
+            .ObserveOnUIDispatcher()
+            .ToReadOnlyReactivePropertySlim();
 
         #region method
         /// <summary>
@@ -183,21 +183,29 @@ namespace VRChatLifelog.Services
             {
                 _logger.LogInformation("New log file created : {filePath}", fileFullPath);
                 StartReadingFile(fileFullPath);
-                WatchingFileCountChanged?.Invoke(this, new WatchingFileCountChangedEventArgs(_watchingFiles.Count));
             }
         }
 
-        private void StartReadingFile(string filePath)
+        private async void StartReadingFile(string filePath)
         {
             try
             {
-                var logFile = new VRChatLogWatcher(filePath, _serviceProvider.GetRequiredService<ILogger<VRChatLogWatcher>>());
+                var logFile = new VRChatLogWatcher(filePath,
+                    _serviceProvider.GetRequiredService<ILogger<VRChatLogWatcher>>());
                 logFile.StartReading();
+                
                 _watchingFiles.Add(logFile);
+
+                await logFile.WaitForCompletionAsync();
+                _watchingFiles.Remove(logFile);
             }
             catch (FileNotFoundException ex)
             {
                 _logger.LogWarning("Log file not found : {filePath}", ex.FileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while reading log file");
             }
         }
         #endregion private method
@@ -216,10 +224,4 @@ namespace VRChatLifelog.Services
         public string VRChatLogDirectory { get; set; }
             = Path.GetFullPath(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"..\LocalLow\VRChat\VRChat\"));
     }
-
-    public class WatchingFileCountChangedEventArgs(int count) : EventArgs
-    {
-        public int Count { get; set; } = count;
-    }
-    public delegate void WatchingFileCountChangedEventHandler(object sender, WatchingFileCountChangedEventArgs args);
 }

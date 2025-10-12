@@ -21,13 +21,7 @@ namespace VRChatLifelog.ViewModels
         internal MainWindowViewModel(IServiceProvider serviceProvider)
         {
             var logWatcher = serviceProvider.GetRequiredService<LogWatcherService>();
-
-            CompositeDisposable.Add(new LivetWeakEventListener<WatchingFileCountChangedEventHandler, WatchingFileCountChangedEventArgs>(
-                h => new WatchingFileCountChangedEventHandler(h),
-                a => logWatcher.WatchingFileCountChanged += a,
-                a => logWatcher.WatchingFileCountChanged -= a,
-                (sender, args) => DispatcherHelper.UIDispatcher.Invoke(() => WatchingFileCount.Value = args.Count)));
-            WatchingFileCount.Value = logWatcher.WatchingFileCount;
+            WatchingFileCount = logWatcher.WatchingFileCount;
 
             SelectedLocationHistory = new ReactivePropertySlim<LocationHistory?>();
             CompositeDisposable.Add(SelectedLocationHistory.Subscribe(x =>
@@ -137,7 +131,7 @@ namespace VRChatLifelog.ViewModels
         /// <summary>
         /// 監視中のファイル数
         /// </summary>
-        public ReactivePropertySlim<int> WatchingFileCount { get; } = new();
+        public ReadOnlyReactivePropertySlim<int> WatchingFileCount { get; }
         #endregion
 
         #region コマンド
