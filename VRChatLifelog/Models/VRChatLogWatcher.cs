@@ -269,7 +269,7 @@ namespace VRChatLifelog.Models
         }
 
         /// <summary>
-        /// ログ項目をDBを軽蔑するテーブルに保存します．
+        /// ログ項目をDBの対応するテーブルに保存します．
         /// </summary>
         /// <param name="item">ログ項目</param>
         private void AddLogItem(LogItem item)
