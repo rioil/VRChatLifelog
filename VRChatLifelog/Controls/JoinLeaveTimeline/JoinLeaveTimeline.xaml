@@ -3,10 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:presentationOptions="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
-             xmlns:data="clr-namespace:VRChatLifelog.Data"
-             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
-             xmlns:controls="clr-namespace:VRChatLifelog.Controls"
              xmlns:local="clr-namespace:VRChatLifelog.Controls.JoinLeaveTimeline"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300">
@@ -54,59 +50,4 @@
             </ItemsPanelTemplate>
         </ItemsControl.ItemsPanel>
     </ItemsControl>
-
-    <!-- <DataGrid Visibility="Collapsed" -->
-    <!--           AutoGenerateColumns="False" -->
-    <!--           IsReadOnly="True" -->
-    <!--           ItemsSource="{Binding JoinLeaveHistories.Value}" -->
-    <!--           SelectedItem="{Binding SelectedJoinLeaveHistory.Value}" -->
-    <!--           SelectionMode="Single"> -->
-    <!--     <DataGrid.Columns> -->
-    <!--         <DataGridTemplateColumn Header="Name"> -->
-    <!--             <DataGridTemplateColumn.CellTemplate> -->
-    <!--                 <DataTemplate DataType="{x:Type data:JoinLeaveHistory}"> -->
-    <!--                     <TextBlock Margin="5,0" Text="{Binding PlayerName}" ToolTip="{Binding PlayerId}" /> -->
-    <!--                 </DataTemplate> -->
-    <!--             </DataGridTemplateColumn.CellTemplate> -->
-    <!--         </DataGridTemplateColumn> -->
-    <!--         <DataGridTextColumn Binding="{Binding JoinEvents, StringFormat=yyyy/MM/dd HH:mm:ss}" -->
-    <!--                             Header="Joined" /> -->
-    <!--         <DataGridTextColumn Binding="{Binding LeaveEvents, StringFormat=yyyy/MM/dd HH:mm:ss}" Header="Left" /> -->
-    <!--     </DataGrid.Columns> -->
-    <!--     <DataGrid.RowStyle> -->
-    <!--         <Style TargetType="DataGridRow"> -->
-    <!--             <Setter Property="Tag" -->
-    <!--                     Value="{Binding DataContext.SelectUserNameCandidateCommand, RelativeSource={RelativeSource AncestorType=Window}}" /> -->
-    <!--             <Setter Property="ContextMenu"> -->
-    <!--                 <Setter.Value> -->
-    <!--                     <ContextMenu> -->
-    <!--                         <MenuItem -->
-    <!--                             Command="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource AncestorType=ContextMenu}}" -->
-    <!--                             CommandParameter="{Binding PlayerName}" -->
-    <!--                             Header="このユーザーで絞り込み"> -->
-    <!--                             <MenuItem.Icon> -->
-    <!--                                 <Image> -->
-    <!--                                     <Image.Source> -->
-    <!--                                         <DrawingImage presentationOptions:Freeze="True"> -->
-    <!--                                             <DrawingImage.Drawing> -->
-    <!--                                                 <DrawingGroup> -->
-    <!--                                                     <ImageDrawing -->
-    <!--                                                         ImageSource="{iconPacks:CooliconsImage Kind=Filter}" -->
-    <!--                                                         Rect="0 0 12 12" /> -->
-    <!--                                                     <ImageDrawing -->
-    <!--                                                         ImageSource="{iconPacks:CooliconsImage Kind=User01}" -->
-    <!--                                                         Rect="8 7 8 9" /> -->
-    <!--                                                 </DrawingGroup> -->
-    <!--                                             </DrawingImage.Drawing> -->
-    <!--                                         </DrawingImage> -->
-    <!--                                     </Image.Source> -->
-    <!--                                 </Image> -->
-    <!--                             </MenuItem.Icon> -->
-    <!--                         </MenuItem> -->
-    <!--                     </ContextMenu> -->
-    <!--                 </Setter.Value> -->
-    <!--             </Setter> -->
-    <!--         </Style> -->
-    <!--     </DataGrid.RowStyle> -->
-    <!-- </DataGrid> -->
 </UserControl>
