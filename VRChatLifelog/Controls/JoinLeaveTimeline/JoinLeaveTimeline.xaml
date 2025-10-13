@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="VRChatLifelog.Controls.JoinLeaveTimeline"
+﻿<UserControl x:Class="VRChatLifelog.Controls.JoinLeaveTimeline.JoinLeaveTimeline"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -7,64 +7,12 @@
              xmlns:data="clr-namespace:VRChatLifelog.Data"
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              xmlns:controls="clr-namespace:VRChatLifelog.Controls"
+             xmlns:local="clr-namespace:VRChatLifelog.Controls.JoinLeaveTimeline"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300">
-    <UserControl.Resources>
-        <Style x:Key="EventBorderStyle" TargetType="Border" d:DataContext="{d:DesignInstance controls:TimelineEvent}">
-            <!-- 常に適用 -->
-            <Setter Property="Width" Value="5" />
-            <Setter Property="DockPanel.Dock" Value="Left" />
-
-            <!-- 状態に応じて切り替え -->
-            <Setter Property="CornerRadius" Value="0" />
-            <Setter Property="Margin" Value="0,0,5,0" />
-            <Setter Property="Opacity" Value="1" />
-
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding ParticipationPhase}"
-                             Value="{x:Static controls:EParticipationPhase.BeforeJoin}">
-                    <Setter Property="CornerRadius" Value="2" />
-                    <Setter Property="Margin" Value="0,0,5,8" />
-                    <Setter Property="Opacity" Value="0.4" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding ParticipationPhase}"
-                             Value="{x:Static controls:EParticipationPhase.AfterLeave}">
-                    <Setter Property="CornerRadius" Value="2" />
-                    <Setter Property="Margin" Value="0,8,5,0" />
-                    <Setter Property="Opacity" Value="0.4" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="PlayerNameButtonStyle" TargetType="Button"
-               d:DataContext="{d:DesignInstance controls:TimelineEvent}">
-            <Setter Property="Content" Value="{Binding History.PlayerName}" />
-            <Setter Property="Tag" Value="{Binding}" />
-            <Setter Property="HorizontalContentAlignment" Value="Left" />
-            <Setter Property="BorderBrush" Value="Transparent" />
-            <EventSetter Event="Click" Handler="OnTimelineEventSelected" />
-
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="FontWeight" Value="Normal" />
-            <Setter Property="Foreground" Value="Black" />
-
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                    <Setter Property="Background" Value="LightBlue" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsOverlappedWithSelection}" Value="False">
-                    <Setter Property="Foreground" Value="Gray" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsOverlappedWithSelection}" Value="True">
-                    <Setter Property="FontWeight" Value="Bold" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-    </UserControl.Resources>
-
     <ItemsControl x:Name="TimelineItems">
         <ItemsControl.ItemTemplate>
-            <DataTemplate DataType="{x:Type controls:TimelineItem}">
+            <DataTemplate DataType="{x:Type local:TimelineItem}">
                 <DockPanel HorizontalAlignment="Stretch">
                     <TextBlock DockPanel.Dock="Left" Text="{Binding FormattedTime}" Margin="0,0,5,0" Width="110"
                                TextAlignment="Right" />
@@ -73,11 +21,8 @@
                         <ItemsControl ItemsSource="{Binding JoinEvents}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <DockPanel>
-                                        <Border Background="MediumSeaGreen"
-                                                Style="{StaticResource EventBorderStyle}" />
-                                        <Button Style="{StaticResource PlayerNameButtonStyle}" />
-                                    </DockPanel>
+                                    <local:JoinLeaveTimelineItem LineBrush="MediumSeaGreen"
+                                                                 Click="OnTimelineEventClicked" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
@@ -85,11 +30,8 @@
                         <ItemsControl ItemsSource="{Binding LeaveEvents}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <DockPanel>
-                                        <Border Background="IndianRed"
-                                                Style="{StaticResource EventBorderStyle}" />
-                                        <Button Style="{StaticResource PlayerNameButtonStyle}" />
-                                    </DockPanel>
+                                    <local:JoinLeaveTimelineItem LineBrush="IndianRed"
+                                                                 Click="OnTimelineEventClicked" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

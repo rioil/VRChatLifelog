@@ -9,6 +9,7 @@
         xmlns:l="http://schemas.livet-mvvm.net/2011/wpf"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:VRChatLifelog.ViewModels"
+        xmlns:joinLeaveTimeline="clr-namespace:VRChatLifelog.Controls.JoinLeaveTimeline"
         Title="VRChat Lifelog" Width="900"
         Height="600" MinWidth="900"
         MinHeight="350"
@@ -408,7 +409,9 @@
                               VerticalAlignment="Stretch" />
 
                 <!--  滞在プレイヤー履歴情報  -->
-                <controls:JoinLeaveTimeline Grid.Column="2" ItemsSource="{Binding JoinLeaveHistories.Value}" />
+                <joinLeaveTimeline:JoinLeaveTimeline Grid.Column="2"
+                                                     ItemsSource="{Binding JoinLeaveHistories.Value}"
+                                                     SelectedItem="{Binding SelectedJoinLeaveHistory.Value, Mode=OneWayToSource}" />
             </Grid>
         </Grid>
 

@@ -7,18 +7,20 @@ using System.Windows.Controls;
 using Livet;
 using VRChatLifelog.Data;
 
-namespace VRChatLifelog.Controls;
+namespace VRChatLifelog.Controls.JoinLeaveTimeline;
 
 public partial class JoinLeaveTimeline : UserControl
 {
     private readonly ObservableCollection<TimelineItem> _items = [];
-    private TimelineEvent? _selectedEvent;
+    private JoinLeaveHistory? _selectedHistory;
 
     public JoinLeaveTimeline()
     {
         InitializeComponent();
         TimelineItems.ItemsSource = _items;
     }
+
+    #region dependency property
 
     public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register(
         nameof(ItemsSource), typeof(IEnumerable<JoinLeaveHistory>), typeof(JoinLeaveTimeline),
@@ -35,6 +37,25 @@ public partial class JoinLeaveTimeline : UserControl
         if (d is not JoinLeaveTimeline control) return;
         control.ResetTimelineItems();
     }
+
+    public static readonly DependencyProperty SelectedItemProperty = DependencyProperty.Register(
+        nameof(SelectedItem), typeof(JoinLeaveHistory), typeof(JoinLeaveTimeline),
+        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+            OnSelectedItemChanged));
+
+    public JoinLeaveHistory? SelectedItem
+    {
+        get => (JoinLeaveHistory?) GetValue(SelectedItemProperty);
+        set => SetValue(SelectedItemProperty, value);
+    }
+
+    private static void OnSelectedItemChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not JoinLeaveTimeline control) return;
+        control.SelectHistory(control.SelectedItem);
+    }
+
+    #endregion
 
     private void ResetTimelineItems()
     {
@@ -81,20 +102,22 @@ public partial class JoinLeaveTimeline : UserControl
         }
     }
 
-    private void OnTimelineEventSelected(object sender, RoutedEventArgs e)
+    private void OnTimelineEventClicked(object sender, TimelineItemClickedEventArgs e)
     {
-        if (sender is not Button { Tag: TimelineEvent timelineEvent }) return;
+        SelectHistory(e.Item.History == _selectedHistory ? null : e.Item.History);
+    }
 
-        timelineEvent.IsSelected = !timelineEvent.IsSelected;
-        if (_selectedEvent != null && _selectedEvent != timelineEvent)
+    private void SelectHistory(JoinLeaveHistory? history)
+    {
+        if (_selectedHistory == history)
         {
-            _selectedEvent.IsSelected = false;
+            return;
         }
 
-        _selectedEvent = timelineEvent.IsSelected ? timelineEvent : null;
+        _selectedHistory = history;
 
-        var activeFrom = _selectedEvent?.History.Joined ?? DateTime.MinValue;
-        var activeTo = _selectedEvent?.History.Left ?? DateTime.MaxValue;
+        var activeFrom = _selectedHistory?.Joined ?? DateTime.MinValue;
+        var activeTo = _selectedHistory?.Left ?? DateTime.MaxValue;
         foreach (var item in _items)
         {
             item.ParticipationPhase = (activeFrom <= item.Time, item.Time <= activeTo) switch
@@ -106,24 +129,27 @@ public partial class JoinLeaveTimeline : UserControl
 
             foreach (var joinEvent in item.JoinEvents)
             {
+                joinEvent.IsSelected = joinEvent.History == _selectedHistory;
                 joinEvent.ParticipationPhase = item.ParticipationPhase;
                 joinEvent.IsOverlappedWithSelection = IsOverlapped(joinEvent);
             }
 
             foreach (var leaveEvent in item.LeaveEvents)
             {
+                leaveEvent.IsSelected = leaveEvent.History == _selectedHistory;
                 leaveEvent.ParticipationPhase = item.ParticipationPhase;
                 leaveEvent.IsOverlappedWithSelection = IsOverlapped(leaveEvent);
             }
         }
 
+        SelectedItem = _selectedHistory;
         return;
 
         bool? IsOverlapped(TimelineEvent @event)
         {
-            if (_selectedEvent == null) return null;
+            if (_selectedHistory == null) return null;
             var target = @event.History;
-            var selected = _selectedEvent.History;
+            var selected = _selectedHistory;
 
             var leftBeforeJoin = target.Left < selected.Joined;
             var joinedAfterLeft = selected.Left != null && target.Joined > selected.Left;
