@@ -17,7 +17,7 @@ namespace VRChatLifelog.Controls
         /// <summary>
         /// 日時フォーマット文字列
         /// </summary>
-        private const string DateTimeFormat = "yyyy/MM/dd HH:mm:ss";
+        private const string DateTimeFormat = "yyyy/MM/dd (ddd) HH:mm:ss";
 
         /// <summary>
         /// 時刻のみフォーマット文字列
@@ -29,22 +29,26 @@ namespace VRChatLifelog.Controls
         /// </summary>
         public DateTime Join
         {
-            get { return (DateTime)GetValue(JoinProperty); }
-            set { SetValue(JoinProperty, value); }
+            get => (DateTime) GetValue(JoinProperty);
+            set => SetValue(JoinProperty, value);
         }
+
         public static readonly DependencyProperty JoinProperty =
-            DependencyProperty.Register("Join", typeof(DateTime), typeof(JoinLeaveTime), new PropertyMetadata(default(DateTime), OnJoinChanged));
+            DependencyProperty.Register(nameof(Join), typeof(DateTime), typeof(JoinLeaveTime),
+                new PropertyMetadata(default(DateTime), OnJoinChanged));
 
         /// <summary>
         /// Leave時間
         /// </summary>
         public DateTime? Leave
         {
-            get { return (DateTime?)GetValue(LeaveProperty); }
-            set { SetValue(LeaveProperty, value); }
+            get => (DateTime?) GetValue(LeaveProperty);
+            set => SetValue(LeaveProperty, value);
         }
+
         public static readonly DependencyProperty LeaveProperty =
-            DependencyProperty.Register("Leave", typeof(DateTime?), typeof(JoinLeaveTime), new PropertyMetadata(default(DateTime?), OnLeaveChanged));
+            DependencyProperty.Register(nameof(Leave), typeof(DateTime?), typeof(JoinLeaveTime),
+                new PropertyMetadata(null, OnLeaveChanged));
 
         /// <summary>
         /// <see cref="Join"/>が変化したときの処理を行います．
@@ -53,7 +57,11 @@ namespace VRChatLifelog.Controls
         /// <param name="e"></param>
         private static void OnJoinChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is not JoinLeaveTime instance) { return; }
+            if (d is not JoinLeaveTime instance)
+            {
+                return;
+            }
+
             instance.JoinTimeText.Text = instance.Join.ToString(DateTimeFormat);
         }
 
@@ -64,7 +72,11 @@ namespace VRChatLifelog.Controls
         /// <param name="e"></param>
         private static void OnLeaveChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is not JoinLeaveTime instance) { return; }
+            if (d is not JoinLeaveTime instance)
+            {
+                return;
+            }
+
             if (instance.Leave is null)
             {
                 instance.LeaveTimeText.Text = null;
