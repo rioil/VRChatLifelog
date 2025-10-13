@@ -97,29 +97,46 @@ public partial class JoinLeaveTimeline : UserControl
         var activeTo = _selectedEvent?.History.Left ?? DateTime.MaxValue;
         foreach (var item in _items)
         {
-            item.DisplayType = (activeFrom <= item.Time, item.Time <= activeTo) switch
+            item.ParticipationPhase = (activeFrom <= item.Time, item.Time <= activeTo) switch
             {
-                (true, true) => ETimelineDisplayType.Included,
-                (true, false) => ETimelineDisplayType.ExcludedAfter,
-                (false, _) => ETimelineDisplayType.ExcludedBefore,
+                (true, true) => EParticipationPhase.DuringStay,
+                (true, false) => EParticipationPhase.AfterLeave,
+                (false, _) => EParticipationPhase.BeforeJoin,
             };
+
             foreach (var joinEvent in item.JoinEvents)
             {
-                joinEvent.TimelineDisplayType = item.DisplayType;
+                joinEvent.ParticipationPhase = item.ParticipationPhase;
+                joinEvent.IsOverlappedWithSelection = IsOverlapped(joinEvent);
             }
+
             foreach (var leaveEvent in item.LeaveEvents)
             {
-                leaveEvent.TimelineDisplayType = item.DisplayType;
+                leaveEvent.ParticipationPhase = item.ParticipationPhase;
+                leaveEvent.IsOverlappedWithSelection = IsOverlapped(leaveEvent);
             }
+        }
+
+        return;
+
+        bool? IsOverlapped(TimelineEvent @event)
+        {
+            if (_selectedEvent == null) return null;
+            var target = @event.History;
+            var selected = _selectedEvent.History;
+
+            var leftBeforeJoin = target.Left < selected.Joined;
+            var joinedAfterLeft = selected.Left != null && target.Joined > selected.Left;
+            return !(leftBeforeJoin || joinedAfterLeft);
         }
     }
 }
 
 public class TimelineEvent(DateTime time, JoinLeaveHistory history, bool isJoin) : NotificationObject
 {
-    public DateTime Time { get; init; } = time;
-    public JoinLeaveHistory History { get; init; } = history;
-    public bool IsJoin { get; init; } = isJoin;
+    public DateTime Time { get; } = time;
+    public JoinLeaveHistory History { get; } = history;
+    public bool IsJoin { get; } = isJoin;
 
     public bool IsSelected
     {
@@ -128,36 +145,44 @@ public class TimelineEvent(DateTime time, JoinLeaveHistory history, bool isJoin)
     }
 
     private bool _isSelected;
-    
-    public ETimelineDisplayType TimelineDisplayType
+
+    public EParticipationPhase ParticipationPhase
     {
-        get => _timelineDisplayType;
-        set => RaisePropertyChangedIfSet(ref _timelineDisplayType, value);
+        get => _participationPhase;
+        set => RaisePropertyChangedIfSet(ref _participationPhase, value);
     }
 
-    private ETimelineDisplayType _timelineDisplayType = ETimelineDisplayType.Included;
+    private EParticipationPhase _participationPhase = EParticipationPhase.DuringStay;
+
+    public bool? IsOverlappedWithSelection
+    {
+        get => _isOverlappedWithSelection;
+        set => RaisePropertyChangedIfSet(ref _isOverlappedWithSelection, value);
+    }
+
+    private bool? _isOverlappedWithSelection;
 }
 
 public class TimelineItem(DateTime time, string formattedTime, TimelineEvent[] joinEvents, TimelineEvent[] leaveEvents)
     : NotificationObject
 {
-    public DateTime Time { get; init; } = time;
-    public string FormattedTime { get; init; } = formattedTime;
-    public TimelineEvent[] JoinEvents { get; init; } = joinEvents;
-    public TimelineEvent[] LeaveEvents { get; init; } = leaveEvents;
+    public DateTime Time { get; } = time;
+    public string FormattedTime { get; } = formattedTime;
+    public TimelineEvent[] JoinEvents { get; } = joinEvents;
+    public TimelineEvent[] LeaveEvents { get; } = leaveEvents;
 
-    public ETimelineDisplayType DisplayType
+    public EParticipationPhase ParticipationPhase
     {
-        get => _displayType;
-        set => RaisePropertyChangedIfSet(ref _displayType, value);
+        get => _participationPhase;
+        set => RaisePropertyChangedIfSet(ref _participationPhase, value);
     }
 
-    private ETimelineDisplayType _displayType = ETimelineDisplayType.Included;
+    private EParticipationPhase _participationPhase = EParticipationPhase.DuringStay;
 }
 
-public enum ETimelineDisplayType
+public enum EParticipationPhase
 {
-    Included,
-    ExcludedBefore,
-    ExcludedAfter,
+    DuringStay,
+    BeforeJoin,
+    AfterLeave,
 }

@@ -21,14 +21,14 @@
             <Setter Property="Opacity" Value="1" />
 
             <Style.Triggers>
-                <DataTrigger Binding="{Binding TimelineDisplayType}"
-                             Value="{x:Static controls:ETimelineDisplayType.ExcludedBefore}">
+                <DataTrigger Binding="{Binding ParticipationPhase}"
+                             Value="{x:Static controls:EParticipationPhase.BeforeJoin}">
                     <Setter Property="CornerRadius" Value="2" />
                     <Setter Property="Margin" Value="0,0,5,8" />
                     <Setter Property="Opacity" Value="0.4" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding TimelineDisplayType}"
-                             Value="{x:Static controls:ETimelineDisplayType.ExcludedAfter}">
+                <DataTrigger Binding="{Binding ParticipationPhase}"
+                             Value="{x:Static controls:EParticipationPhase.AfterLeave}">
                     <Setter Property="CornerRadius" Value="2" />
                     <Setter Property="Margin" Value="0,8,5,0" />
                     <Setter Property="Opacity" Value="0.4" />
@@ -40,10 +40,25 @@
                d:DataContext="{d:DesignInstance controls:TimelineEvent}">
             <Setter Property="Content" Value="{Binding History.PlayerName}" />
             <Setter Property="Tag" Value="{Binding}" />
-            <Setter Property="Background" Value="Transparent" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <EventSetter Event="Click" Handler="OnTimelineEventSelected" />
+
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="Foreground" Value="Black" />
+
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter Property="Background" Value="LightBlue" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsOverlappedWithSelection}" Value="False">
+                    <Setter Property="Foreground" Value="Gray" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsOverlappedWithSelection}" Value="True">
+                    <Setter Property="FontWeight" Value="Bold" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
     </UserControl.Resources>
 
